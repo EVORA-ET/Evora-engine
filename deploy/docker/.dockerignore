@@ -1,0 +1,10 @@
+__pycache__/
+*.py[codz]
+*.egg-info/
+.git/
+.gitignore
+.env
+.venv/
+venv/
+*.sqlite3
+.DS_Store
