@@ -1,0 +1,296 @@
+openapi: 3.0.3
+info:
+  title: Evora Engine API
+  version: 1.0.0
+  description: Backend API for the Evora engine platform.
+paths:
+  /api/me:
+    get:
+      operationId: me_retrieve
+      description: Returns the profile of the authenticated user.
+      summary: Get current user
+      tags:
+      - me
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+  /api/schema/:
+    get:
+      operationId: schema_retrieve
+      description: |-
+        OpenApi3 schema for this API. Format can be selected via content negotiation.
+
+        - YAML: application/vnd.oai.openapi
+        - JSON: application/vnd.oai.openapi+json
+      parameters:
+      - in: query
+        name: format
+        schema:
+          type: string
+          enum:
+          - json
+          - yaml
+      - in: query
+        name: lang
+        schema:
+          type: string
+          enum:
+          - af
+          - ar
+          - ar-dz
+          - ast
+          - az
+          - be
+          - bg
+          - bn
+          - br
+          - bs
+          - ca
+          - ckb
+          - cs
+          - cy
+          - da
+          - de
+          - dsb
+          - el
+          - en
+          - en-au
+          - en-gb
+          - eo
+          - es
+          - es-ar
+          - es-co
+          - es-mx
+          - es-ni
+          - es-ve
+          - et
+          - eu
+          - fa
+          - fi
+          - fr
+          - fy
+          - ga
+          - gd
+          - gl
+          - he
+          - hi
+          - hr
+          - hsb
+          - ht
+          - hu
+          - hy
+          - ia
+          - id
+          - ig
+          - io
+          - is
+          - it
+          - ja
+          - ka
+          - kab
+          - kk
+          - km
+          - kn
+          - ko
+          - ky
+          - lb
+          - lt
+          - lv
+          - mk
+          - ml
+          - mn
+          - mr
+          - ms
+          - my
+          - nb
+          - ne
+          - nl
+          - nn
+          - os
+          - pa
+          - pl
+          - pt
+          - pt-br
+          - ro
+          - ru
+          - sk
+          - sl
+          - sq
+          - sr
+          - sr-latn
+          - sv
+          - sw
+          - ta
+          - te
+          - tg
+          - th
+          - tk
+          - tr
+          - tt
+          - udm
+          - ug
+          - uk
+          - ur
+          - uz
+          - vi
+          - zh-hans
+          - zh-hant
+      tags:
+      - schema
+      security:
+      - supabase: []
+      - {}
+      responses:
+        '200':
+          content:
+            application/vnd.oai.openapi:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/yaml:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/vnd.oai.openapi+json:
+              schema:
+                type: object
+                additionalProperties: {}
+            application/json:
+              schema:
+                type: object
+                additionalProperties: {}
+          description: ''
+  /api/user/{id}:
+    get:
+      operationId: user_retrieve
+      description: Returns a user record. Only the authenticated user can access their
+        own record.
+      summary: Get user by ID
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - user
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '403':
+          description: No response body
+        '404':
+          description: No response body
+    patch:
+      operationId: user_partial_update
+      description: Updates the authenticated user's name and mobile_number.
+      summary: Update current user
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - user
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedUserUpdate'
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+          description: ''
+        '403':
+          description: No response body
+        '404':
+          description: No response body
+components:
+  schemas:
+    PatchedUserUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        mobile_number:
+          type: string
+          maxLength: 20
+    StatusEnum:
+      enum:
+      - active
+      - inactive
+      type: string
+      description: |-
+        * `active` - Active
+        * `inactive` - Inactive
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+          maxLength: 255
+        email:
+          type: string
+          format: email
+          readOnly: true
+        mobile_number:
+          type: string
+          maxLength: 20
+        status:
+          $ref: '#/components/schemas/StatusEnum'
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - email
+      - id
+      - name
+      - updated_at
+  securitySchemes:
+    supabase:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Supabase JWT authentication. Obtain a token by signing in via the
+        Supabase client.
