@@ -4,6 +4,11 @@ from users.models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
+    organization_id = serializers.PrimaryKeyRelatedField(
+        source='organization',
+        read_only=True,
+    )
+
     class Meta:
         model = User
         fields = [
