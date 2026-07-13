@@ -231,8 +231,291 @@ paths:
           description: No response body
         '404':
           description: No response body
+  /api/organization:
+    post:
+      operationId: organization_create
+      description: Creates a new organization.
+      summary: Create organization
+      tags:
+      - organization
+      security:
+      - supabase: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OrganizationCreate'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: Organization created
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+  /api/organization/{id}:
+    get:
+      operationId: organization_retrieve
+      description: Returns an organization by its ID.
+      summary: Get organization by ID
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organization
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '404':
+          description: Not found
+    patch:
+      operationId: organization_partial_update
+      description: Partially updates an organization.
+      summary: Update organization
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - organization
+      security:
+      - supabase: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganizationUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganizationUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedOrganizationUpdate'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Organization'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '404':
+          description: Not found
 components:
   schemas:
+    Organization:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        industry:
+          type: string
+          maxLength: 255
+        headquarters_address:
+          type: string
+        headquarters_location:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+              description: '[longitude, latitude]'
+          description: GeoJSON Point (SRID 4326)
+        operating_states:
+          type: array
+          items:
+            type: string
+            maxLength: 100
+        operating_cities:
+          type: array
+          items:
+            type: string
+            maxLength: 255
+        gst_number:
+          type: string
+          maxLength: 50
+        website:
+          type: string
+          format: uri
+          maxLength: 500
+        logo_url:
+          type: string
+          format: uri
+          maxLength: 500
+        timezone:
+          type: string
+          maxLength: 100
+        currency:
+          type: string
+          maxLength: 10
+        business_hours:
+          type: object
+        data_quality_score:
+          type: number
+          format: double
+          nullable: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - updated_at
+    OrganizationCreate:
+      type: object
+      required:
+      - name
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        industry:
+          type: string
+          maxLength: 255
+        headquarters_address:
+          type: string
+        headquarters_location:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+        operating_states:
+          type: array
+          items:
+            type: string
+        operating_cities:
+          type: array
+          items:
+            type: string
+        gst_number:
+          type: string
+          maxLength: 50
+        website:
+          type: string
+          format: uri
+          maxLength: 500
+        logo_url:
+          type: string
+          format: uri
+          maxLength: 500
+        timezone:
+          type: string
+          maxLength: 100
+        currency:
+          type: string
+          maxLength: 10
+        business_hours:
+          type: object
+        data_quality_score:
+          type: number
+          format: double
+          nullable: true
+    PatchedOrganizationUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        industry:
+          type: string
+          maxLength: 255
+        headquarters_address:
+          type: string
+        headquarters_location:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+        operating_states:
+          type: array
+          items:
+            type: string
+        operating_cities:
+          type: array
+          items:
+            type: string
+        gst_number:
+          type: string
+          maxLength: 50
+        website:
+          type: string
+          format: uri
+          maxLength: 500
+        logo_url:
+          type: string
+          format: uri
+          maxLength: 500
+        timezone:
+          type: string
+          maxLength: 100
+        currency:
+          type: string
+          maxLength: 10
+        business_hours:
+          type: object
+        data_quality_score:
+          type: number
+          format: double
+          nullable: true
     PatchedUserUpdate:
       type: object
       properties:

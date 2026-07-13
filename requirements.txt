@@ -5,3 +5,4 @@ PyJWT>=2.8,<3
 cryptography>=41.0,<43
 requests>=2.31,<3
 drf-spectacular>=0.28,<1
+djangorestframework-gis>=1.1,<2

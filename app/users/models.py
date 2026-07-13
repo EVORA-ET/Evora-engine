@@ -10,7 +10,12 @@ class UserStatus(models.TextChoices):
 
 class User(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    organization_id = models.UUIDField(null=True, blank=True)
+    organization = models.ForeignKey(
+        'organizations.Organization',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='users',
+    )
     name = models.CharField(max_length=255)
     email = models.EmailField(unique=True)
     mobile_number = models.CharField(max_length=20, blank=True, default='')
