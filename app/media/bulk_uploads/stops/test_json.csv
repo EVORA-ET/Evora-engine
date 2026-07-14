@@ -1,0 +1,2 @@
+name,address,stop_type,operating_hours
+JSON Stop,JSON Address,hub,{"mon":"09:00-18:00","tue":"09:00-18:00"}

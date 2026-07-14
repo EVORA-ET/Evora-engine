@@ -536,6 +536,219 @@ paths:
           description: User not associated with any organization
         '404':
           description: Not found
+  /api/stop:
+    get:
+      operationId: stop_list
+      description: Returns all stops belonging to the authenticated user's organization.
+      summary: List stops
+      tags:
+      - stop
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Stop'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+    post:
+      operationId: stop_create
+      description: Creates a new stop under the authenticated user's organization.
+      summary: Create stop
+      tags:
+      - stop
+      security:
+      - supabase: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StopCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/StopCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/StopCreate'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stop'
+          description: Stop created
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+  /api/stop/{id}:
+    get:
+      operationId: stop_retrieve
+      description: Returns a stop by its ID (scoped to user's organization).
+      summary: Get stop by ID
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - stop
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stop'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    patch:
+      operationId: stop_partial_update
+      description: Partially updates a stop (scoped to user's organization).
+      summary: Update stop
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - stop
+      security:
+      - supabase: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedStopUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedStopUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedStopUpdate'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Stop'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    delete:
+      operationId: stop_destroy
+      description: Deletes a stop (scoped to user's organization).
+      summary: Delete stop
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - stop
+      security:
+      - supabase: []
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+  /api/stops/bulk-upload:
+    post:
+      operationId: stop_bulk_upload
+      description: Upload a CSV or Excel file containing stop records. The file is processed asynchronously.
+      summary: Bulk upload stops
+      tags:
+      - stop
+      security:
+      - supabase: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: CSV (.csv) or Excel (.xlsx, .xls) file
+              required:
+              - file
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StopBulkUpload'
+          description: Upload accepted
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+  /api/stops/bulk-upload/{upload_id}:
+    get:
+      operationId: stop_bulk_upload_status
+      description: Returns the status, progress, and error report for a bulk upload.
+      summary: Get bulk upload status
+      parameters:
+      - in: path
+        name: upload_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - stop
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StopBulkUpload'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
 components:
   schemas:
     Organization:
@@ -1073,6 +1286,211 @@ components:
         insurance_expiry:
           type: string
           format: date
+    Stop:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        address:
+          type: string
+        location:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+              description: '[longitude, latitude]'
+          description: GeoJSON Point (SRID 4326)
+        stop_type:
+          $ref: '#/components/schemas/StopTypeEnum'
+        service_time_minutes:
+          type: integer
+        parking_capacity:
+          type: integer
+        workshop_available:
+          type: boolean
+        fuel_station_available:
+          type: boolean
+        charging_available:
+          type: boolean
+        charger_count:
+          type: integer
+        maintenance_bays:
+          type: integer
+        operating_hours:
+          type: object
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - address
+      - stop_type
+      - updated_at
+    StopCreate:
+      type: object
+      required:
+      - name
+      - address
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        address:
+          type: string
+        location:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+        stop_type:
+          $ref: '#/components/schemas/StopTypeEnum'
+        service_time_minutes:
+          type: integer
+        parking_capacity:
+          type: integer
+        workshop_available:
+          type: boolean
+        fuel_station_available:
+          type: boolean
+        charging_available:
+          type: boolean
+        charger_count:
+          type: integer
+        maintenance_bays:
+          type: integer
+        operating_hours:
+          type: object
+    PatchedStopUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        address:
+          type: string
+        location:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+        stop_type:
+          $ref: '#/components/schemas/StopTypeEnum'
+        service_time_minutes:
+          type: integer
+        parking_capacity:
+          type: integer
+        workshop_available:
+          type: boolean
+        fuel_station_available:
+          type: boolean
+        charging_available:
+          type: boolean
+        charger_count:
+          type: integer
+        maintenance_bays:
+          type: integer
+        operating_hours:
+          type: object
+    StopBulkUpload:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        file:
+          type: string
+          format: uri
+          readOnly: true
+        status:
+          type: string
+          enum:
+          - pending
+          - processing
+          - completed
+          - failed
+        total_rows:
+          type: integer
+          readOnly: true
+        processed_rows:
+          type: integer
+          readOnly: true
+        failed_rows:
+          type: integer
+          readOnly: true
+        error_report:
+          type: array
+          items:
+            type: object
+            properties:
+              row:
+                type: integer
+              errors:
+                type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    StopTypeEnum:
+      enum:
+      - customer
+      - warehouse
+      - charging_station
+      - hub
+      type: string
+      description: |-
+        * `customer` - Customer
+        * `warehouse` - Warehouse
+        * `charging_station` - Charging Station
+        * `hub` - Hub
     VehicleTypeEnum:
       enum:
       - bus
