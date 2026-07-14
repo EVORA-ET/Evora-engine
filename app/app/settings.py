@@ -47,6 +47,7 @@ INSTALLED_APPS = [
     'drivers',
     'depots',
     'stops',
+    'job_templates',
 ]
 
 MIDDLEWARE = [
