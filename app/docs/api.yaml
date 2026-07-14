@@ -536,6 +536,581 @@ paths:
           description: User not associated with any organization
         '404':
           description: Not found
+  /api/driver:
+    get:
+      operationId: driver_list
+      description: Returns all drivers belonging to the authenticated user's organization.
+      summary: List drivers
+      tags:
+      - driver
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Driver'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+    post:
+      operationId: driver_create
+      description: Creates a new driver under the authenticated user's organization.
+      summary: Create driver
+      tags:
+      - driver
+      security:
+      - supabase: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DriverCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DriverCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DriverCreate'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+          description: Driver created
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+  /api/driver/{id}:
+    get:
+      operationId: driver_retrieve
+      description: Returns a driver by its ID (scoped to user's organization).
+      summary: Get driver by ID
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    patch:
+      operationId: driver_partial_update
+      description: Partially updates a driver (scoped to user's organization).
+      summary: Update driver
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - supabase: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDriverUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDriverUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDriverUpdate'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Driver'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    delete:
+      operationId: driver_destroy
+      description: Deletes a driver (scoped to user's organization).
+      summary: Delete driver
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - supabase: []
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+  /api/drivers/bulk-upload:
+    post:
+      operationId: driver_bulk_upload
+      description: Upload a CSV or Excel file containing driver records. The file is processed asynchronously.
+      summary: Bulk upload drivers
+      tags:
+      - driver
+      security:
+      - supabase: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: CSV (.csv) or Excel (.xlsx, .xls) file
+              required:
+              - file
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverBulkUpload'
+          description: Upload accepted
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+  /api/drivers/bulk-upload/{upload_id}:
+    get:
+      operationId: driver_bulk_upload_status
+      description: Returns the status, progress, and error report for a bulk upload.
+      summary: Get bulk upload status
+      parameters:
+      - in: path
+        name: upload_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - driver
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DriverBulkUpload'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+  /api/depot:
+    get:
+      operationId: depot_list
+      description: Returns all depots belonging to the authenticated user's organization.
+      summary: List depots
+      tags:
+      - depot
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Depot'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+    post:
+      operationId: depot_create
+      description: Creates a new depot under the authenticated user's organization.
+      summary: Create depot
+      tags:
+      - depot
+      security:
+      - supabase: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DepotCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/DepotCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/DepotCreate'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Depot'
+          description: Depot created
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+  /api/depot/{id}:
+    get:
+      operationId: depot_retrieve
+      description: Returns a depot by its ID (scoped to user's organization).
+      summary: Get depot by ID
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - depot
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Depot'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    patch:
+      operationId: depot_partial_update
+      description: Partially updates a depot (scoped to user's organization).
+      summary: Update depot
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - depot
+      security:
+      - supabase: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedDepotUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedDepotUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedDepotUpdate'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Depot'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    delete:
+      operationId: depot_destroy
+      description: Deletes a depot (scoped to user's organization).
+      summary: Delete depot
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - depot
+      security:
+      - supabase: []
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+  /api/depots/bulk-upload:
+    post:
+      operationId: depot_bulk_upload
+      description: Upload a CSV or Excel file containing depot records. The file is processed asynchronously.
+      summary: Bulk upload depots
+      tags:
+      - depot
+      security:
+      - supabase: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: CSV (.csv) or Excel (.xlsx, .xls) file
+              required:
+              - file
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepotBulkUpload'
+          description: Upload accepted
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+  /api/depots/bulk-upload/{upload_id}:
+    get:
+      operationId: depot_bulk_upload_status
+      description: Returns the status, progress, and error report for a bulk upload.
+      summary: Get bulk upload status
+      parameters:
+      - in: path
+        name: upload_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - depot
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DepotBulkUpload'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+  /api/job-template:
+    get:
+      operationId: job_template_list
+      description: Returns all job templates belonging to the authenticated user's organization.
+      summary: List job templates
+      tags:
+      - job-template
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobTemplate'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+    post:
+      operationId: job_template_create
+      description: Creates a new job template under the authenticated user's organization.
+      summary: Create job template
+      tags:
+      - job-template
+      security:
+      - supabase: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobTemplateCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JobTemplateCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JobTemplateCreate'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobTemplate'
+          description: Job template created
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+  /api/job-template/{id}:
+    get:
+      operationId: job_template_retrieve
+      description: Returns a job template by its ID (scoped to user's organization).
+      summary: Get job template by ID
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - job-template
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobTemplate'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    patch:
+      operationId: job_template_partial_update
+      description: Partially updates a job template (scoped to user's organization).
+      summary: Update job template
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - job-template
+      security:
+      - supabase: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedJobTemplateUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedJobTemplateUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedJobTemplateUpdate'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobTemplate'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    delete:
+      operationId: job_template_destroy
+      description: Deletes a job template (scoped to user's organization).
+      summary: Delete job template
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - job-template
+      security:
+      - supabase: []
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
   /api/stop:
     get:
       operationId: stop_list
@@ -743,6 +1318,155 @@ paths:
               schema:
                 $ref: '#/components/schemas/StopBulkUpload'
           description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+  /api/job-instance:
+    get:
+      operationId: job_instance_list
+      description: Returns all job instances belonging to the authenticated user's organization.
+      summary: List job instances
+      tags:
+      - job-instance
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobInstance'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+    post:
+      operationId: job_instance_create
+      description: Creates a new job instance under the authenticated user's organization.
+      summary: Create job instance
+      tags:
+      - job-instance
+      security:
+      - supabase: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobInstanceCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JobInstanceCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JobInstanceCreate'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobInstance'
+          description: Job instance created
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+  /api/job-instance/{id}:
+    get:
+      operationId: job_instance_retrieve
+      description: Returns a job instance by its ID (scoped to user's organization).
+      summary: Get job instance by ID
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - job-instance
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobInstance'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    patch:
+      operationId: job_instance_partial_update
+      description: Partially updates a job instance (scoped to user's organization).
+      summary: Update job instance
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - job-instance
+      security:
+      - supabase: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedJobInstanceUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedJobInstanceUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedJobInstanceUpdate'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobInstance'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    delete:
+      operationId: job_instance_destroy
+      description: Deletes a job instance (scoped to user's organization).
+      summary: Delete job instance
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - job-instance
+      security:
+      - supabase: []
+      responses:
+        '204':
+          description: No content
         '401':
           description: No JWT or invalid JWT
         '403':
@@ -1479,6 +2203,755 @@ components:
           type: string
           format: date-time
           readOnly: true
+    Driver:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          readOnly: true
+        user_id:
+          type: string
+          format: uuid
+          nullable: true
+        driver_code:
+          type: string
+          maxLength: 100
+        name:
+          type: string
+          maxLength: 255
+        date_of_birth:
+          type: string
+          format: date
+        license_number:
+          type: string
+          maxLength: 100
+        license_class:
+          type: string
+          maxLength: 50
+        license_expiry:
+          type: string
+          format: date
+        experience_years:
+          type: number
+          format: double
+        job_id:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          $ref: '#/components/schemas/DriverStatusEnum'
+        shift:
+          type: string
+          maxLength: 100
+        emergency_contact_name:
+          type: string
+          maxLength: 255
+        emergency_contact_phone:
+          type: string
+          maxLength: 20
+        languages:
+          type: array
+          items:
+            type: string
+            maxLength: 100
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - driver_code
+      - name
+      - date_of_birth
+      - license_number
+      - license_class
+      - license_expiry
+      - experience_years
+      - created_at
+      - id
+      - updated_at
+    DriverCreate:
+      type: object
+      required:
+      - driver_code
+      - name
+      - date_of_birth
+      - license_number
+      - license_class
+      - license_expiry
+      - experience_years
+      properties:
+        driver_code:
+          type: string
+          maxLength: 100
+        name:
+          type: string
+          maxLength: 255
+        date_of_birth:
+          type: string
+          format: date
+        license_number:
+          type: string
+          maxLength: 100
+        license_class:
+          type: string
+          maxLength: 50
+        license_expiry:
+          type: string
+          format: date
+        experience_years:
+          type: number
+          format: double
+        user_id:
+          type: string
+          format: uuid
+          nullable: true
+        job_id:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          $ref: '#/components/schemas/DriverStatusEnum'
+        shift:
+          type: string
+          maxLength: 100
+        emergency_contact_name:
+          type: string
+          maxLength: 255
+        emergency_contact_phone:
+          type: string
+          maxLength: 20
+        languages:
+          type: array
+          items:
+            type: string
+    PatchedDriverUpdate:
+      type: object
+      properties:
+        driver_code:
+          type: string
+          maxLength: 100
+        name:
+          type: string
+          maxLength: 255
+        date_of_birth:
+          type: string
+          format: date
+        license_number:
+          type: string
+          maxLength: 100
+        license_class:
+          type: string
+          maxLength: 50
+        license_expiry:
+          type: string
+          format: date
+        experience_years:
+          type: number
+          format: double
+        user_id:
+          type: string
+          format: uuid
+          nullable: true
+        job_id:
+          type: string
+          format: uuid
+          nullable: true
+        status:
+          $ref: '#/components/schemas/DriverStatusEnum'
+        shift:
+          type: string
+          maxLength: 100
+        emergency_contact_name:
+          type: string
+          maxLength: 255
+        emergency_contact_phone:
+          type: string
+          maxLength: 20
+        languages:
+          type: array
+          items:
+            type: string
+    DriverBulkUpload:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        file:
+          type: string
+          format: uri
+          readOnly: true
+        status:
+          type: string
+          enum:
+          - pending
+          - processing
+          - completed
+          - failed
+        total_rows:
+          type: integer
+          readOnly: true
+        processed_rows:
+          type: integer
+          readOnly: true
+        failed_rows:
+          type: integer
+          readOnly: true
+        error_report:
+          type: array
+          items:
+            type: object
+            properties:
+              row:
+                type: integer
+              errors:
+                type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    DriverStatusEnum:
+      enum:
+      - active
+      - inactive
+      - on_leave
+      - suspended
+      - terminated
+      type: string
+      description: |-
+        * `active` - Active
+        * `inactive` - Inactive
+        * `on_leave` - On Leave
+        * `suspended` - Suspended
+        * `terminated` - Terminated
+    Depot:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          readOnly: true
+        name:
+          type: string
+          maxLength: 255
+        address:
+          type: string
+        location:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+              description: '[longitude, latitude]'
+          description: GeoJSON Point (SRID 4326)
+        parking_capacity:
+          type: integer
+        workshop_available:
+          type: boolean
+        fuel_station_available:
+          type: boolean
+        charging_available:
+          type: boolean
+        charger_count:
+          type: integer
+        maintenance_bays:
+          type: integer
+        operating_hours:
+          type: object
+        depot_manager_name:
+          type: string
+          maxLength: 255
+        depot_manager_contact:
+          type: string
+          maxLength: 20
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - address
+      - updated_at
+    DepotCreate:
+      type: object
+      required:
+      - name
+      - address
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        address:
+          type: string
+        location:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+        parking_capacity:
+          type: integer
+        workshop_available:
+          type: boolean
+        fuel_station_available:
+          type: boolean
+        charging_available:
+          type: boolean
+        charger_count:
+          type: integer
+        maintenance_bays:
+          type: integer
+        operating_hours:
+          type: object
+        depot_manager_name:
+          type: string
+          maxLength: 255
+        depot_manager_contact:
+          type: string
+          maxLength: 20
+    PatchedDepotUpdate:
+      type: object
+      properties:
+        name:
+          type: string
+          maxLength: 255
+        address:
+          type: string
+        location:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+        parking_capacity:
+          type: integer
+        workshop_available:
+          type: boolean
+        fuel_station_available:
+          type: boolean
+        charging_available:
+          type: boolean
+        charger_count:
+          type: integer
+        maintenance_bays:
+          type: integer
+        operating_hours:
+          type: object
+        depot_manager_name:
+          type: string
+          maxLength: 255
+        depot_manager_contact:
+          type: string
+          maxLength: 20
+    DepotBulkUpload:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        file:
+          type: string
+          format: uri
+          readOnly: true
+        status:
+          type: string
+          enum:
+          - pending
+          - processing
+          - completed
+          - failed
+        total_rows:
+          type: integer
+          readOnly: true
+        processed_rows:
+          type: integer
+          readOnly: true
+        failed_rows:
+          type: integer
+          readOnly: true
+        error_report:
+          type: array
+          items:
+            type: object
+            properties:
+              row:
+                type: integer
+              errors:
+                type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+    JobTemplate:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          readOnly: true
+        source_depot_id:
+          type: string
+          format: uuid
+        destination_stop_id:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        is_recurring:
+          type: boolean
+        recurrence_rule:
+          type: string
+        is_permanent:
+          type: boolean
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        estimated_duration_minutes:
+          type: integer
+          nullable: true
+        estimated_distance_km:
+          type: number
+          format: double
+          nullable: true
+        estimated_energy_kwh:
+          type: number
+          format: double
+          nullable: true
+        status:
+          $ref: '#/components/schemas/JobTemplateStatusEnum'
+        created_by_id:
+          type: string
+          format: uuid
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - id
+      - name
+      - updated_at
+    JobTemplateCreate:
+      type: object
+      required:
+      - source_depot_id
+      - destination_stop_id
+      - name
+      properties:
+        source_depot_id:
+          type: string
+          format: uuid
+        destination_stop_id:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        is_recurring:
+          type: boolean
+        recurrence_rule:
+          type: string
+        is_permanent:
+          type: boolean
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        estimated_duration_minutes:
+          type: integer
+          nullable: true
+        estimated_distance_km:
+          type: number
+          format: double
+          nullable: true
+        estimated_energy_kwh:
+          type: number
+          format: double
+          nullable: true
+        status:
+          $ref: '#/components/schemas/JobTemplateStatusEnum'
+    PatchedJobTemplateUpdate:
+      type: object
+      properties:
+        source_depot_id:
+          type: string
+          format: uuid
+        destination_stop_id:
+          type: string
+          format: uuid
+          nullable: true
+        name:
+          type: string
+          maxLength: 255
+        description:
+          type: string
+        is_recurring:
+          type: boolean
+        recurrence_rule:
+          type: string
+        is_permanent:
+          type: boolean
+        start_date:
+          type: string
+          format: date
+          nullable: true
+        end_date:
+          type: string
+          format: date
+          nullable: true
+        estimated_duration_minutes:
+          type: integer
+          nullable: true
+        estimated_distance_km:
+          type: number
+          format: double
+          nullable: true
+        estimated_energy_kwh:
+          type: number
+          format: double
+          nullable: true
+        status:
+          $ref: '#/components/schemas/JobTemplateStatusEnum'
+    JobTemplateStatusEnum:
+      enum:
+      - ACTIVE
+      - PAUSED
+      - ARCHIVED
+      type: string
+      description: |-
+        * `ACTIVE` - Active
+        * `PAUSED` - Paused
+        * `ARCHIVED` - Archived
+    JobInstance:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          readOnly: true
+        job_template_id:
+          type: string
+          format: uuid
+        vehicle_id:
+          type: string
+          format: uuid
+          nullable: true
+        driver_id:
+          type: string
+          format: uuid
+          nullable: true
+        scheduled_start_at:
+          type: string
+          format: date-time
+          nullable: true
+        scheduled_end_at:
+          type: string
+          format: date-time
+          nullable: true
+        actual_start_at:
+          type: string
+          format: date-time
+          nullable: true
+        actual_end_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: '#/components/schemas/JobInstanceStatusEnum'
+        completion_percentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - completion_percentage
+      - created_at
+      - driver_id
+      - id
+      - job_template_id
+      - organization_id
+      - status
+      - updated_at
+      - vehicle_id
+    JobInstanceCreate:
+      type: object
+      required:
+      - job_template_id
+      - vehicle_id
+      - driver_id
+      properties:
+        job_template_id:
+          type: string
+          format: uuid
+        vehicle_id:
+          type: string
+          format: uuid
+        driver_id:
+          type: string
+          format: uuid
+        scheduled_start_at:
+          type: string
+          format: date-time
+          nullable: true
+        scheduled_end_at:
+          type: string
+          format: date-time
+          nullable: true
+        actual_start_at:
+          type: string
+          format: date-time
+          nullable: true
+        actual_end_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: '#/components/schemas/JobInstanceStatusEnum'
+        completion_percentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+    PatchedJobInstanceUpdate:
+      type: object
+      properties:
+        job_template_id:
+          type: string
+          format: uuid
+        vehicle_id:
+          type: string
+          format: uuid
+          nullable: true
+        driver_id:
+          type: string
+          format: uuid
+          nullable: true
+        scheduled_start_at:
+          type: string
+          format: date-time
+          nullable: true
+        scheduled_end_at:
+          type: string
+          format: date-time
+          nullable: true
+        actual_start_at:
+          type: string
+          format: date-time
+          nullable: true
+        actual_end_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: '#/components/schemas/JobInstanceStatusEnum'
+        completion_percentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+    JobInstanceStatusEnum:
+      enum:
+      - PENDING
+      - ASSIGNED
+      - IN_PROGRESS
+      - COMPLETED
+      - CANCELLED
+      type: string
+      description: |-
+        * `PENDING` - PENDING
+        * `ASSIGNED` - ASSIGNED
+        * `IN_PROGRESS` - IN_PROGRESS
+        * `COMPLETED` - COMPLETED
+        * `CANCELLED` - CANCELLED
     StopTypeEnum:
       enum:
       - customer

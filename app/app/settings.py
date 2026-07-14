@@ -48,6 +48,7 @@ INSTALLED_APPS = [
     'depots',
     'stops',
     'job_templates',
+    'job_instances',
 ]
 
 MIDDLEWARE = [
