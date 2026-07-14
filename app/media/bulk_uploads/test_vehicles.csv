@@ -1,0 +1,3 @@
+registration_number,manufacturer,model,manufacture_year,purchase_date,vehicle_type,fuel_type,mileage_kmpl,payload_kg,seating_capacity,gvw_kg,odometer_km,avg_daily_km,avg_monthly_km,trips_per_day,fuel_cost_per_month,maintenance_cost_per_month,insurance_expiry
+MH02CD5678,Ashok Leyland,Dost,2024,2024-01-10,truck,diesel,10.5,2000.00,3,5000.00,5000.00,80.00,2400.00,1.5,35000.00,3000.00,2025-01-10
+MH03EF9012,Mahindra,Scorpio,2023,2023-08-20,car,petrol,15.0,800.00,7,2500.00,25000.00,60.00,1800.00,2.0,25000.00,4000.00,2025-08-20

@@ -43,6 +43,7 @@ INSTALLED_APPS = [
     'drf_spectacular',
     'users',
     'organizations',
+    'vehicles',
 ]
 
 MIDDLEWARE = [
@@ -139,6 +140,9 @@ REST_FRAMEWORK = {
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
 }
+
+MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+MEDIA_URL = 'media/'
 
 SPECTACULAR_SETTINGS = {
     'TITLE': 'Evora Engine API',

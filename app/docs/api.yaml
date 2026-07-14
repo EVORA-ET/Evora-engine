@@ -323,6 +323,219 @@ paths:
           description: No JWT or invalid JWT
         '404':
           description: Not found
+  /api/vehicle:
+    get:
+      operationId: vehicle_list
+      description: Returns all vehicles belonging to the authenticated user's organization.
+      summary: List vehicles
+      tags:
+      - vehicle
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Vehicle'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+    post:
+      operationId: vehicle_create
+      description: Creates a new vehicle under the authenticated user's organization.
+      summary: Create vehicle
+      tags:
+      - vehicle
+      security:
+      - supabase: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VehicleCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/VehicleCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/VehicleCreate'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+          description: Vehicle created
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+  /api/vehicle/{id}:
+    get:
+      operationId: vehicle_retrieve
+      description: Returns a vehicle by its ID (scoped to user's organization).
+      summary: Get vehicle by ID
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - vehicle
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    patch:
+      operationId: vehicle_partial_update
+      description: Partially updates a vehicle (scoped to user's organization).
+      summary: Update vehicle
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - vehicle
+      security:
+      - supabase: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedVehicleUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedVehicleUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedVehicleUpdate'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Vehicle'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    delete:
+      operationId: vehicle_destroy
+      description: Deletes a vehicle (scoped to user's organization).
+      summary: Delete vehicle
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - vehicle
+      security:
+      - supabase: []
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+  /api/vehicles/bulk-upload:
+    post:
+      operationId: vehicle_bulk_upload
+      description: Upload a CSV or Excel file containing vehicle records. The file is processed asynchronously.
+      summary: Bulk upload vehicles
+      tags:
+      - vehicle
+      security:
+      - supabase: []
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: CSV (.csv) or Excel (.xlsx, .xls) file
+              required:
+              - file
+      responses:
+        '202':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkUpload'
+          description: Upload accepted
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+  /api/vehicles/bulk-upload/{upload_id}:
+    get:
+      operationId: vehicle_bulk_upload_status
+      description: Returns the status, progress, and error report for a bulk upload.
+      summary: Get bulk upload status
+      parameters:
+      - in: path
+        name: upload_id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - vehicle
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BulkUpload'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
 components:
   schemas:
     Organization:
@@ -525,6 +738,432 @@ components:
         mobile_number:
           type: string
           maxLength: 20
+    Vehicle:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          readOnly: true
+        registration_number:
+          type: string
+          maxLength: 100
+        vin:
+          type: string
+          maxLength: 100
+        chassis_number:
+          type: string
+          maxLength: 100
+        manufacturer:
+          type: string
+          maxLength: 255
+        model:
+          type: string
+          maxLength: 255
+        variant:
+          type: string
+          maxLength: 255
+        manufacture_year:
+          type: integer
+        purchase_date:
+          type: string
+          format: date
+        vehicle_type:
+          $ref: '#/components/schemas/VehicleTypeEnum'
+        fuel_type:
+          $ref: '#/components/schemas/FuelTypeEnum'
+        engine_cc:
+          type: integer
+          nullable: true
+        fuel_tank_capacity:
+          type: number
+          format: double
+          nullable: true
+        battery_capacity_kwh:
+          type: number
+          format: double
+          nullable: true
+        mileage_kmpl:
+          type: number
+          format: double
+        payload_kg:
+          type: number
+          format: double
+        seating_capacity:
+          type: integer
+        gvw_kg:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/VehicleStatusEnum'
+        current_location:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+              description: '[longitude, latitude]'
+          description: GeoJSON Point (SRID 4326)
+        assigned_driver_id:
+          type: string
+          format: uuid
+          nullable: true
+        odometer_km:
+          type: number
+          format: double
+        avg_daily_km:
+          type: number
+          format: double
+        avg_monthly_km:
+          type: number
+          format: double
+        trips_per_day:
+          type: number
+          format: double
+        fuel_cost_per_month:
+          type: number
+          format: double
+        maintenance_cost_per_month:
+          type: number
+          format: double
+        insurance_expiry:
+          type: string
+          format: date
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - registration_number
+      - manufacturer
+      - model
+      - manufacture_year
+      - purchase_date
+      - vehicle_type
+      - fuel_type
+      - mileage_kmpl
+      - payload_kg
+      - seating_capacity
+      - gvw_kg
+      - odometer_km
+      - avg_daily_km
+      - avg_monthly_km
+      - trips_per_day
+      - fuel_cost_per_month
+      - maintenance_cost_per_month
+      - insurance_expiry
+    VehicleCreate:
+      type: object
+      required:
+      - registration_number
+      - manufacturer
+      - model
+      - manufacture_year
+      - purchase_date
+      - vehicle_type
+      - fuel_type
+      - mileage_kmpl
+      - payload_kg
+      - seating_capacity
+      - gvw_kg
+      - odometer_km
+      - avg_daily_km
+      - avg_monthly_km
+      - trips_per_day
+      - fuel_cost_per_month
+      - maintenance_cost_per_month
+      - insurance_expiry
+      properties:
+        registration_number:
+          type: string
+          maxLength: 100
+        vin:
+          type: string
+          maxLength: 100
+        chassis_number:
+          type: string
+          maxLength: 100
+        manufacturer:
+          type: string
+          maxLength: 255
+        model:
+          type: string
+          maxLength: 255
+        variant:
+          type: string
+          maxLength: 255
+        manufacture_year:
+          type: integer
+        purchase_date:
+          type: string
+          format: date
+        vehicle_type:
+          $ref: '#/components/schemas/VehicleTypeEnum'
+        fuel_type:
+          $ref: '#/components/schemas/FuelTypeEnum'
+        engine_cc:
+          type: integer
+          nullable: true
+        fuel_tank_capacity:
+          type: number
+          format: double
+          nullable: true
+        battery_capacity_kwh:
+          type: number
+          format: double
+          nullable: true
+        mileage_kmpl:
+          type: number
+          format: double
+        payload_kg:
+          type: number
+          format: double
+        seating_capacity:
+          type: integer
+        gvw_kg:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/VehicleStatusEnum'
+        current_location:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+        assigned_driver_id:
+          type: string
+          format: uuid
+          nullable: true
+        odometer_km:
+          type: number
+          format: double
+        avg_daily_km:
+          type: number
+          format: double
+        avg_monthly_km:
+          type: number
+          format: double
+        trips_per_day:
+          type: number
+          format: double
+        fuel_cost_per_month:
+          type: number
+          format: double
+        maintenance_cost_per_month:
+          type: number
+          format: double
+        insurance_expiry:
+          type: string
+          format: date
+    PatchedVehicleUpdate:
+      type: object
+      properties:
+        registration_number:
+          type: string
+          maxLength: 100
+        vin:
+          type: string
+          maxLength: 100
+        chassis_number:
+          type: string
+          maxLength: 100
+        manufacturer:
+          type: string
+          maxLength: 255
+        model:
+          type: string
+          maxLength: 255
+        variant:
+          type: string
+          maxLength: 255
+        manufacture_year:
+          type: integer
+        purchase_date:
+          type: string
+          format: date
+        vehicle_type:
+          $ref: '#/components/schemas/VehicleTypeEnum'
+        fuel_type:
+          $ref: '#/components/schemas/FuelTypeEnum'
+        engine_cc:
+          type: integer
+          nullable: true
+        fuel_tank_capacity:
+          type: number
+          format: double
+          nullable: true
+        battery_capacity_kwh:
+          type: number
+          format: double
+          nullable: true
+        mileage_kmpl:
+          type: number
+          format: double
+        payload_kg:
+          type: number
+          format: double
+        seating_capacity:
+          type: integer
+        gvw_kg:
+          type: number
+          format: double
+        status:
+          $ref: '#/components/schemas/VehicleStatusEnum'
+        current_location:
+          type: object
+          nullable: true
+          properties:
+            type:
+              type: string
+              enum:
+              - Point
+            coordinates:
+              type: array
+              items:
+                type: number
+              minItems: 2
+              maxItems: 2
+        assigned_driver_id:
+          type: string
+          format: uuid
+          nullable: true
+        odometer_km:
+          type: number
+          format: double
+        avg_daily_km:
+          type: number
+          format: double
+        avg_monthly_km:
+          type: number
+          format: double
+        trips_per_day:
+          type: number
+          format: double
+        fuel_cost_per_month:
+          type: number
+          format: double
+        maintenance_cost_per_month:
+          type: number
+          format: double
+        insurance_expiry:
+          type: string
+          format: date
+    VehicleTypeEnum:
+      enum:
+      - bus
+      - truck
+      - car
+      - van
+      - trailer
+      - other
+      type: string
+      description: |-
+        * `bus` - Bus
+        * `truck` - Truck
+        * `car` - Car
+        * `van` - Van
+        * `trailer` - Trailer
+        * `other` - Other
+    FuelTypeEnum:
+      enum:
+      - diesel
+      - petrol
+      - ev
+      - cng
+      - lpg
+      - other
+      type: string
+      description: |-
+        * `diesel` - Diesel
+        * `petrol` - Petrol
+        * `ev` - EV
+        * `cng` - CNG
+        * `lpg` - LPG
+        * `other` - Other
+    VehicleStatusEnum:
+      enum:
+      - active
+      - inactive
+      - under_maintenance
+      - retired
+      - sold
+      type: string
+      description: |-
+        * `active` - Active
+        * `inactive` - Inactive
+        * `under_maintenance` - Under Maintenance
+        * `retired` - Retired
+        * `sold` - Sold
+    BulkUpload:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        file:
+          type: string
+          format: uri
+          readOnly: true
+        status:
+          type: string
+          enum:
+          - pending
+          - processing
+          - completed
+          - failed
+        total_rows:
+          type: integer
+          readOnly: true
+        processed_rows:
+          type: integer
+          readOnly: true
+        failed_rows:
+          type: integer
+          readOnly: true
+        error_report:
+          type: array
+          items:
+            type: object
+            properties:
+              row:
+                type: integer
+              errors:
+                type: string
+          readOnly: true
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
     StatusEnum:
       enum:
       - active
