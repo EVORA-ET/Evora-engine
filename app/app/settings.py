@@ -49,6 +49,7 @@ INSTALLED_APPS = [
     'stops',
     'job_templates',
     'job_instances',
+    'instance_stops',
 ]
 
 MIDDLEWARE = [
