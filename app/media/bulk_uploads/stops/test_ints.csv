@@ -1,0 +1,2 @@
+name,address,stop_type,parking_capacity,charger_count,maintenance_bays,service_time_minutes
+Int Test,Int Address,warehouse,50,10,3,45

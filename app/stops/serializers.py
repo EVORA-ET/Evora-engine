@@ -1,7 +1,7 @@
 from rest_framework import serializers
 from rest_framework_gis.fields import GeometryField
 
-from depots.models import BulkUpload, Depot
+from stops.models import BulkUpload, Stop
 
 
 def validate_operating_hours(value):
@@ -12,10 +12,13 @@ def validate_operating_hours(value):
     return value
 
 
-class DepotSerializer(serializers.ModelSerializer):
+class StopSerializer(serializers.ModelSerializer):
     location = GeometryField(required=False, allow_null=True)
     organization_id = serializers.UUIDField(read_only=True)
     parking_capacity = serializers.IntegerField(
+        required=False, min_value=0, default=0
+    )
+    service_time_minutes = serializers.IntegerField(
         required=False, min_value=0, default=0
     )
     charger_count = serializers.IntegerField(
@@ -26,13 +29,15 @@ class DepotSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Depot
+        model = Stop
         fields = [
             'id',
             'organization_id',
             'name',
             'address',
             'location',
+            'stop_type',
+            'service_time_minutes',
             'parking_capacity',
             'workshop_available',
             'fuel_station_available',
@@ -40,8 +45,6 @@ class DepotSerializer(serializers.ModelSerializer):
             'charger_count',
             'maintenance_bays',
             'operating_hours',
-            'depot_manager_name',
-            'depot_manager_contact',
             'created_at',
             'updated_at',
         ]
@@ -62,9 +65,12 @@ class DepotSerializer(serializers.ModelSerializer):
         return validate_operating_hours(value)
 
 
-class DepotUpdateSerializer(serializers.ModelSerializer):
+class StopUpdateSerializer(serializers.ModelSerializer):
     location = GeometryField(required=False, allow_null=True)
     parking_capacity = serializers.IntegerField(
+        required=False, min_value=0,
+    )
+    service_time_minutes = serializers.IntegerField(
         required=False, min_value=0,
     )
     charger_count = serializers.IntegerField(
@@ -75,11 +81,13 @@ class DepotUpdateSerializer(serializers.ModelSerializer):
     )
 
     class Meta:
-        model = Depot
+        model = Stop
         fields = [
             'name',
             'address',
             'location',
+            'stop_type',
+            'service_time_minutes',
             'parking_capacity',
             'workshop_available',
             'fuel_station_available',
@@ -87,8 +95,6 @@ class DepotUpdateSerializer(serializers.ModelSerializer):
             'charger_count',
             'maintenance_bays',
             'operating_hours',
-            'depot_manager_name',
-            'depot_manager_contact',
         ]
 
     def validate_location(self, value):
@@ -107,7 +113,7 @@ class DepotUpdateSerializer(serializers.ModelSerializer):
 class BulkUploadSerializer(serializers.ModelSerializer):
     class Meta:
         model = BulkUpload
-        ref_name = 'DepotBulkUpload'
+        ref_name = 'StopBulkUpload'
         fields = [
             'id',
             'file',
@@ -128,7 +134,7 @@ class BulkUploadSerializer(serializers.ModelSerializer):
 class BulkUploadStatusSerializer(serializers.ModelSerializer):
     class Meta:
         model = BulkUpload
-        ref_name = 'DepotBulkUploadStatus'
+        ref_name = 'StopBulkUploadStatus'
         fields = [
             'id',
             'status',

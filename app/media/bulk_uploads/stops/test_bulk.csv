@@ -1,0 +1,4 @@
+name,address,stop_type,service_time_minutes,parking_capacity,workshop_available,fuel_station_available,charging_available,charger_count,maintenance_bays,operating_hours
+Hub A,123 Hub St,hub,15,20,true,false,true,5,2,"{""mon"":""09:00-18:00""}"
+Warehouse B,456 Warehouse Ave,warehouse,,50,false,true,false,0,0,{}
+Customer C,789 Customer Rd,customer,10,,true,,,1,,

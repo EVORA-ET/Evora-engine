@@ -1,0 +1,2 @@
+name,address,stop_type,parking_capacity,charger_count,maintenance_bays,service_time_minutes,workshop_available,fuel_station_available,charging_available
+Type Test,Type Address,warehouse,50,10,3,45,true,false,yes

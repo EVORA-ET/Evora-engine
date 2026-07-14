@@ -1,0 +1,2 @@
+name,address,stop_type,workshop_available,fuel_station_available,charging_available
+Bool Test,Bool Address,customer,true,false,yes
