@@ -1473,6 +1473,155 @@ paths:
           description: User not associated with any organization
         '404':
           description: Not found
+  /api/instance-stop:
+    get:
+      operationId: instance_stop_list
+      description: Returns all instance stops belonging to the authenticated user's organization.
+      summary: List instance stops
+      tags:
+      - instance-stop
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/InstanceStop'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+    post:
+      operationId: instance_stop_create
+      description: Creates a new instance stop under the authenticated user's organization.
+      summary: Create instance stop
+      tags:
+      - instance-stop
+      security:
+      - supabase: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InstanceStopCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/InstanceStopCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/InstanceStopCreate'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceStop'
+          description: Instance stop created
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+  /api/instance-stop/{id}:
+    get:
+      operationId: instance_stop_retrieve
+      description: Returns an instance stop by its ID (scoped to user's organization).
+      summary: Get instance stop by ID
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - instance-stop
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceStop'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    patch:
+      operationId: instance_stop_partial_update
+      description: Partially updates an instance stop (scoped to user's organization).
+      summary: Update instance stop
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - instance-stop
+      security:
+      - supabase: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedInstanceStopUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedInstanceStopUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedInstanceStopUpdate'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/InstanceStop'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    delete:
+      operationId: instance_stop_destroy
+      description: Deletes an instance stop (scoped to user's organization).
+      summary: Delete instance stop
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - instance-stop
+      security:
+      - supabase: []
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
 components:
   schemas:
     Organization:
@@ -2952,6 +3101,129 @@ components:
         * `IN_PROGRESS` - IN_PROGRESS
         * `COMPLETED` - COMPLETED
         * `CANCELLED` - CANCELLED
+    InstanceStop:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        job_instance_id:
+          type: string
+          format: uuid
+        stop_id:
+          type: string
+          format: uuid
+        sequence_number:
+          type: integer
+        estimated_arrival:
+          type: string
+          format: date-time
+          nullable: true
+        actual_arrival:
+          type: string
+          format: date-time
+          nullable: true
+        actual_departure:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: '#/components/schemas/InstanceStopStatusEnum'
+        delay_minutes:
+          type: integer
+          default: 0
+        notes:
+          type: string
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - created_at
+      - delay_minutes
+      - id
+      - job_instance_id
+      - notes
+      - sequence_number
+      - status
+      - stop_id
+    InstanceStopCreate:
+      type: object
+      required:
+      - job_instance_id
+      - stop_id
+      - sequence_number
+      properties:
+        job_instance_id:
+          type: string
+          format: uuid
+        stop_id:
+          type: string
+          format: uuid
+        sequence_number:
+          type: integer
+        estimated_arrival:
+          type: string
+          format: date-time
+          nullable: true
+        actual_arrival:
+          type: string
+          format: date-time
+          nullable: true
+        actual_departure:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: '#/components/schemas/InstanceStopStatusEnum'
+        delay_minutes:
+          type: integer
+          default: 0
+        notes:
+          type: string
+    PatchedInstanceStopUpdate:
+      type: object
+      properties:
+        job_instance_id:
+          type: string
+          format: uuid
+        stop_id:
+          type: string
+          format: uuid
+        sequence_number:
+          type: integer
+        estimated_arrival:
+          type: string
+          format: date-time
+          nullable: true
+        actual_arrival:
+          type: string
+          format: date-time
+          nullable: true
+        actual_departure:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: '#/components/schemas/InstanceStopStatusEnum'
+        delay_minutes:
+          type: integer
+          default: 0
+        notes:
+          type: string
+    InstanceStopStatusEnum:
+      enum:
+      - PENDING
+      - ARRIVED
+      - SKIPPED
+      - COMPLETED
+      type: string
+      description: |-
+        * `PENDING` - PENDING
+        * `ARRIVED` - ARRIVED
+        * `SKIPPED` - SKIPPED
+        * `COMPLETED` - COMPLETED
     StopTypeEnum:
       enum:
       - customer
