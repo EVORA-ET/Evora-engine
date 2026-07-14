@@ -1,0 +1,4 @@
+name,address,parking_capacity,workshop_available,fuel_station_available,charging_available,charger_count,maintenance_bays,operating_hours,depot_manager_name,depot_manager_contact
+Bulk North,789 North Road,30,true,true,false,0,2,"{""mon_fri"":""09:00-18:00""}",Arun Singh,+911234567890
+Bulk South,456 South Ave,20,false,true,true,4,1,"{""mon_fri"":""10:00-19:00""}",Priya Sharma,+919876543210
+Bulk East,123 East Blvd,40,true,false,true,6,3,"{""mon_fri"":""08:00-20:00""}",Vikram Joshi,+917654321098

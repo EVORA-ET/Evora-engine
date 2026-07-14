@@ -1,0 +1,4 @@
+name,address,parking_capacity,workshop_available,fuel_station_available,charging_available,charger_count,maintenance_bays,depot_manager_name,depot_manager_contact
+North Depot,789 North Road,30,true,true,false,0,2,Arun Singh,+911234567890
+South Depot,456 South Ave,20,false,true,true,4,1,Priya Sharma,+919876543210
+East Depot,123 East Blvd,40,true,false,true,6,3,Vikram Joshi,+917654321098

@@ -1,0 +1,4 @@
+name,address,workshop_available,charager_count
+Valid Depot,123 Valid Road,true,5
+,Invalid Road,true,3
+Also Valid,456 Also Valid,false,2
