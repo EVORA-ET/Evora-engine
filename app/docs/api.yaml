@@ -1324,6 +1324,155 @@ paths:
           description: User not associated with any organization
         '404':
           description: Not found
+  /api/job-instance:
+    get:
+      operationId: job_instance_list
+      description: Returns all job instances belonging to the authenticated user's organization.
+      summary: List job instances
+      tags:
+      - job-instance
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/JobInstance'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+    post:
+      operationId: job_instance_create
+      description: Creates a new job instance under the authenticated user's organization.
+      summary: Create job instance
+      tags:
+      - job-instance
+      security:
+      - supabase: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/JobInstanceCreate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/JobInstanceCreate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/JobInstanceCreate'
+      responses:
+        '201':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobInstance'
+          description: Job instance created
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+  /api/job-instance/{id}:
+    get:
+      operationId: job_instance_retrieve
+      description: Returns a job instance by its ID (scoped to user's organization).
+      summary: Get job instance by ID
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - job-instance
+      security:
+      - supabase: []
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobInstance'
+          description: ''
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    patch:
+      operationId: job_instance_partial_update
+      description: Partially updates a job instance (scoped to user's organization).
+      summary: Update job instance
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - job-instance
+      security:
+      - supabase: []
+      requestBody:
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PatchedJobInstanceUpdate'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PatchedJobInstanceUpdate'
+          multipart/form-data:
+            schema:
+              $ref: '#/components/schemas/PatchedJobInstanceUpdate'
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JobInstance'
+          description: ''
+        '400':
+          description: Validation error
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
+    delete:
+      operationId: job_instance_destroy
+      description: Deletes a job instance (scoped to user's organization).
+      summary: Delete job instance
+      parameters:
+      - in: path
+        name: id
+        schema:
+          type: string
+          format: uuid
+        required: true
+      tags:
+      - job-instance
+      security:
+      - supabase: []
+      responses:
+        '204':
+          description: No content
+        '401':
+          description: No JWT or invalid JWT
+        '403':
+          description: User not associated with any organization
+        '404':
+          description: Not found
 components:
   schemas:
     Organization:
@@ -2653,6 +2802,156 @@ components:
         * `ACTIVE` - Active
         * `PAUSED` - Paused
         * `ARCHIVED` - Archived
+    JobInstance:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          readOnly: true
+        organization_id:
+          type: string
+          format: uuid
+          readOnly: true
+        job_template_id:
+          type: string
+          format: uuid
+        vehicle_id:
+          type: string
+          format: uuid
+          nullable: true
+        driver_id:
+          type: string
+          format: uuid
+          nullable: true
+        scheduled_start_at:
+          type: string
+          format: date-time
+          nullable: true
+        scheduled_end_at:
+          type: string
+          format: date-time
+          nullable: true
+        actual_start_at:
+          type: string
+          format: date-time
+          nullable: true
+        actual_end_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: '#/components/schemas/JobInstanceStatusEnum'
+        completion_percentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+        created_at:
+          type: string
+          format: date-time
+          readOnly: true
+        updated_at:
+          type: string
+          format: date-time
+          readOnly: true
+      required:
+      - completion_percentage
+      - created_at
+      - driver_id
+      - id
+      - job_template_id
+      - organization_id
+      - status
+      - updated_at
+      - vehicle_id
+    JobInstanceCreate:
+      type: object
+      required:
+      - job_template_id
+      - vehicle_id
+      - driver_id
+      properties:
+        job_template_id:
+          type: string
+          format: uuid
+        vehicle_id:
+          type: string
+          format: uuid
+        driver_id:
+          type: string
+          format: uuid
+        scheduled_start_at:
+          type: string
+          format: date-time
+          nullable: true
+        scheduled_end_at:
+          type: string
+          format: date-time
+          nullable: true
+        actual_start_at:
+          type: string
+          format: date-time
+          nullable: true
+        actual_end_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: '#/components/schemas/JobInstanceStatusEnum'
+        completion_percentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+    PatchedJobInstanceUpdate:
+      type: object
+      properties:
+        job_template_id:
+          type: string
+          format: uuid
+        vehicle_id:
+          type: string
+          format: uuid
+          nullable: true
+        driver_id:
+          type: string
+          format: uuid
+          nullable: true
+        scheduled_start_at:
+          type: string
+          format: date-time
+          nullable: true
+        scheduled_end_at:
+          type: string
+          format: date-time
+          nullable: true
+        actual_start_at:
+          type: string
+          format: date-time
+          nullable: true
+        actual_end_at:
+          type: string
+          format: date-time
+          nullable: true
+        status:
+          $ref: '#/components/schemas/JobInstanceStatusEnum'
+        completion_percentage:
+          type: integer
+          minimum: 0
+          maximum: 100
+    JobInstanceStatusEnum:
+      enum:
+      - PENDING
+      - ASSIGNED
+      - IN_PROGRESS
+      - COMPLETED
+      - CANCELLED
+      type: string
+      description: |-
+        * `PENDING` - PENDING
+        * `ASSIGNED` - ASSIGNED
+        * `IN_PROGRESS` - IN_PROGRESS
+        * `COMPLETED` - COMPLETED
+        * `CANCELLED` - CANCELLED
     StopTypeEnum:
       enum:
       - customer
