@@ -1,5 +1,6 @@
 from rest_framework import serializers
 
+from organizations.models import Organization
 from users.models import User
 
 
@@ -25,6 +26,13 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserUpdateSerializer(serializers.ModelSerializer):
+    organization_id = serializers.PrimaryKeyRelatedField(
+        source='organization',
+        queryset=Organization.objects.all(),
+        allow_null=True,
+        required=False,
+    )
+
     class Meta:
         model = User
-        fields = ['name', 'mobile_number']
+        fields = ['name', 'mobile_number', 'organization_id']
