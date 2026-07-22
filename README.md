@@ -778,12 +778,4 @@ location = gis_models.PointField(null=True, blank=True)
 
 **Contributors:** EVORA Team
 
----
 
-## 📄 License
-
-Proprietary — EVORA Platform
-
----
-
-**Ready to contribute? Start with the [Getting Started](#-getting-started) section above!**
