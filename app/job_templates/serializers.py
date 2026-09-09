@@ -2,7 +2,6 @@ from rest_framework import serializers
 
 from depots.models import Depot
 from job_templates.models import JobTemplate
-from stops.models import Stop
 
 
 class JobTemplateSerializer(serializers.ModelSerializer):
@@ -11,8 +10,8 @@ class JobTemplateSerializer(serializers.ModelSerializer):
     source_depot_id = serializers.PrimaryKeyRelatedField(
         queryset=Depot.objects.all(), source='source_depot',
     )
-    destination_stop_id = serializers.PrimaryKeyRelatedField(
-        queryset=Stop.objects.all(), source='destination_stop',
+    destination_depot_id = serializers.PrimaryKeyRelatedField(
+        queryset=Depot.objects.all(), source='destination_depot',
     )
 
     class Meta:
@@ -21,7 +20,7 @@ class JobTemplateSerializer(serializers.ModelSerializer):
             'id',
             'organization_id',
             'source_depot_id',
-            'destination_stop_id',
+            'destination_depot_id',
             'name',
             'description',
             'is_recurring',
@@ -46,15 +45,15 @@ class JobTemplateUpdateSerializer(serializers.ModelSerializer):
     source_depot_id = serializers.PrimaryKeyRelatedField(
         queryset=Depot.objects.all(), source='source_depot', required=False,
     )
-    destination_stop_id = serializers.PrimaryKeyRelatedField(
-        queryset=Stop.objects.all(), source='destination_stop', required=False,
+    destination_depot_id = serializers.PrimaryKeyRelatedField(
+        queryset=Depot.objects.all(), source='destination_depot', required=False,
     )
 
     class Meta:
         model = JobTemplate
         fields = [
             'source_depot_id',
-            'destination_stop_id',
+            'destination_depot_id',
             'name',
             'description',
             'is_recurring',
