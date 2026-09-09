@@ -76,15 +76,25 @@ class Vehicle(models.Model):
         srid=4326, geography=True, null=True, blank=True
     )
     assigned_driver_id = models.UUIDField(null=True, blank=True)
-    odometer_km = models.DecimalField(max_digits=12, decimal_places=2)
-    avg_daily_km = models.DecimalField(max_digits=8, decimal_places=2)
-    avg_monthly_km = models.DecimalField(max_digits=10, decimal_places=2)
-    trips_per_day = models.DecimalField(max_digits=6, decimal_places=2)
-    fuel_cost_per_month = models.DecimalField(max_digits=12, decimal_places=2)
-    maintenance_cost_per_month = models.DecimalField(
-        max_digits=12, decimal_places=2
+    odometer_km = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True
     )
-    insurance_expiry = models.DateField()
+    avg_daily_km = models.DecimalField(
+        max_digits=8, decimal_places=2, null=True, blank=True
+    )
+    avg_monthly_km = models.DecimalField(
+        max_digits=10, decimal_places=2, null=True, blank=True
+    )
+    trips_per_day = models.DecimalField(
+        max_digits=6, decimal_places=2, null=True, blank=True
+    )
+    fuel_cost_per_month = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True
+    )
+    maintenance_cost_per_month = models.DecimalField(
+        max_digits=12, decimal_places=2, null=True, blank=True
+    )
+    insurance_expiry = models.DateField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

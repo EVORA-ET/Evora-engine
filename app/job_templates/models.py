@@ -21,11 +21,11 @@ class JobTemplate(models.Model):
         on_delete=models.CASCADE,
         related_name='job_templates',
     )
-    destination_stop = models.ForeignKey(
-        'stops.Stop',
+    destination_depot = models.ForeignKey(
+        'depots.Depot',
         on_delete=models.CASCADE,
         null=True, blank=True,
-        related_name='job_templates',
+        related_name='destination_job_templates',
     )
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, default='')

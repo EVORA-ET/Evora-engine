@@ -15,6 +15,7 @@ class OrganizationSerializer(serializers.ModelSerializer):
             'id',
             'name',
             'industry',
+            'country',
             'headquarters_address',
             'headquarters_location',
             'operating_states',
@@ -42,6 +43,7 @@ class OrganizationUpdateSerializer(serializers.ModelSerializer):
         fields = [
             'name',
             'industry',
+            'country',
             'headquarters_address',
             'headquarters_location',
             'operating_states',

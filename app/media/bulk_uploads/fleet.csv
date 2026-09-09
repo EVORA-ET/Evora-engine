@@ -1,0 +1,3 @@
+registration_number,vin,chassis_number,manufacturer,model,variant,manufacture_year,purchase_date,vehicle_type,fuel_type,engine_cc,fuel_tank_capacity,battery_capacity_kwh,mileage_kmpl,payload_kg,seating_capacity,gvw_kg,status,assigned_driver_id,odometer_km,avg_daily_km,avg_monthly_km,trips_per_day,fuel_cost_per_month,maintenance_cost_per_month,insurance_expiry
+MH12XY9999,vin-9999,ch-9999,Tata,Magic,,,,van,,,800,,,12.0,400.00,4,2200.00,,,
+DL05ZQ4321,vin-4321,ch-4321,SunMobility,City,,2025,2025-06-15,bus,ev,,120.0,15.50,140.0,400.00,22,3200.00,,,,,,,
