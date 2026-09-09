@@ -24,7 +24,10 @@ class OrganizationCreateView(APIView):
     def post(self, request):
         serializer = OrganizationSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        serializer.save()
+        organization = serializer.save()
+        user = request.user
+        user.organization = organization
+        user.save(update_fields=['organization', 'updated_at'])
         return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
