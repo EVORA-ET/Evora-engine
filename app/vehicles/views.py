@@ -282,10 +282,7 @@ def _process_bulk_upload(bulk_id, ext):
                     'registration_number', 'manufacturer', 'model',
                     'manufacture_year', 'purchase_date', 'vehicle_type',
                     'fuel_type', 'mileage_kmpl', 'payload_kg',
-                    'seating_capacity', 'gvw_kg', 'odometer_km',
-                    'avg_daily_km', 'avg_monthly_km', 'trips_per_day',
-                    'fuel_cost_per_month', 'maintenance_cost_per_month',
-                    'insurance_expiry',
+                    'seating_capacity', 'gvw_kg',
                 ]
 
                 missing = [f for f in required_fields if mapped.get(f) is None]
