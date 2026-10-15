@@ -133,7 +133,11 @@ conservative) and says so. Certified range is shown, never used.
 Any **fail** gives `not_suitable`. Any **insufficient** gives
 `insufficient_evidence`. Only `meets_requirements` is
 `eligible_for_scoring`. A migration decision of `approve_transition` is
-refused without a readiness assessment that meets requirements.
+refused unless its readiness assessment is completed, has outcome
+`meets_requirements` **and** has evidence coverage `moderate` or `high`
+(`APPROVAL_MIN_EVIDENCE_LEVELS` in `ev_migration/serializers.py`).
+Low-coverage assessments remain available for exploration and can back a
+`defer` or `reject` decision.
 
 No weighted score exists yet.
 

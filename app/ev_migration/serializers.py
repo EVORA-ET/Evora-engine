@@ -2,9 +2,19 @@ from rest_framework import serializers
 
 from common.fields import OrgScopedPrimaryKeyField
 from evidence import provenance as P
-from evidence.models import Assessment, AssessmentKind, EvidenceSource
+from evidence.models import (
+    Assessment,
+    AssessmentKind,
+    AssessmentStatus,
+    EvidenceSource,
+)
 from ev_migration.models import EVCandidate, MigrationDecision
 from vehicles.models import Vehicle
+
+# Formal approval needs at least this much evidence behind the readiness
+# result. Lower-coverage assessments stay available for exploration and can
+# still back a "defer" or "reject" decision.
+APPROVAL_MIN_EVIDENCE_LEVELS = (P.HIGH, P.MODERATE)
 
 
 class EVCandidateSerializer(serializers.ModelSerializer):
@@ -128,11 +138,19 @@ class MigrationDecisionSerializer(serializers.ModelSerializer):
             r = attrs.get('readiness_assessment')
             if cand is None:
                 errors['ev_candidate_id'] = 'Approving needs a candidate.'
-            if r is None or r.result.get('outcome') != 'meets_requirements':
+            if r is None or r.status != AssessmentStatus.COMPLETED or \
+                    r.result.get('outcome') != 'meets_requirements':
                 errors['decision'] = (
                     'A transition can only be approved with a readiness '
                     'assessment in which every mandatory operational check '
                     'passed.')
+            elif r.evidence_level not in APPROVAL_MIN_EVIDENCE_LEVELS:
+                errors['decision'] = (
+                    f'The readiness assessment has {r.evidence_level} evidence '
+                    'coverage; formal approval needs moderate or high. It can '
+                    'still support a "defer" or "reject" decision. Improve the '
+                    'evidence (replace assumed or stale inputs) and re-run the '
+                    'assessment to approve.')
         if errors:
             raise serializers.ValidationError(errors)
         return attrs

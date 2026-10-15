@@ -4,9 +4,10 @@ evidence, including traceability and reproducibility."""
 from datetime import date, timedelta
 
 from django.test import TestCase
+from django.utils import timezone
 
 from evidence.assessments import reproduce
-from evidence.models import Assessment
+from evidence.models import Assessment, Observation
 from evidence.tests.fixtures import EvidenceWorld, make_source
 
 READINESS = '/api/ev-migration/assessments/readiness'
@@ -125,6 +126,69 @@ class ReadinessApiTests(MigrationApiBase):
         self.assertEqual(d.status_code, 201, d.content)
         self.assertEqual(str(d.data['readiness_assessment_id']),
                          str(r.data['id']))
+
+    def decide(self, assessment_id, decision='approve_transition'):
+        return self.w.post('/api/ev-migration/decisions', {
+            'vehicle_id': self.vid, 'ev_candidate_id': self.cid,
+            'decision': decision, 'readiness_assessment_id': assessment_id,
+            'rationale': 'Review board outcome'})
+
+    def test_approval_accepted_with_moderate_coverage(self):
+        r = self.readiness()
+        self.assertEqual(r.data['result']['outcome'], 'meets_requirements')
+        self.assertEqual(r.data['evidence_level'], 'moderate')
+        d = self.decide(r.data['id'])
+        self.assertEqual(d.status_code, 201, d.content)
+        self.assertEqual(d.data['decision'], 'approve_transition')
+
+    def test_approval_accepted_with_high_coverage(self):
+        # Replace the organization-provided inputs with measured evidence.
+        self.w.org_value('charging_window_hours', 10, 'h', origin='measured',
+                         vehicle_id=self.vid)
+        self.w.org_value('required_payload_kg', 1000, 'kg', origin='measured',
+                         vehicle_id=self.vid)
+        r = self.readiness()
+        self.assertEqual(r.data['result']['outcome'], 'meets_requirements')
+        self.assertEqual(r.data['evidence_level'], 'high', r.data[
+            'evidence_reasons'])
+        self.assertEqual(self.decide(r.data['id']).status_code, 201)
+
+    def test_approval_refused_with_low_coverage(self):
+        # Same vehicle and candidate, but the design day is only assumed.
+        r = self.readiness(design_day_distance={
+            'value': 150, 'unit': 'km', 'origin': 'assumed',
+            'note': 'Rough guess'})
+        self.assertEqual(r.status_code, 201, r.content)
+        self.assertEqual(r.data['result']['outcome'], 'meets_requirements')
+        self.assertEqual(r.data['evidence_level'], 'low')
+        d = self.decide(r.data['id'])
+        self.assertEqual(d.status_code, 400)
+        self.assertIn('coverage', str(d.data['decision']))
+        # The low-coverage assessment can still back defer / reject.
+        self.assertEqual(self.decide(r.data['id'], 'defer').status_code, 201)
+        self.assertEqual(self.decide(r.data['id'], 'reject').status_code, 201)
+
+    def test_approval_refused_with_stale_evidence(self):
+        # An odometer history that ended 60 days ago is stale (limit 30).
+        Observation.objects.filter(kind='odometer_km').delete()
+        base = timezone.now() - timedelta(days=100)
+        for i in range(40):
+            self.w.observe('odometer_km', 20000 + 150 * i, 'km',
+                           vehicle_id=self.vid,
+                           observed_at=(base + timedelta(days=i)).isoformat())
+        r = self.readiness(usage_window_days=120)
+        self.assertEqual(r.data['result']['outcome'], 'meets_requirements')
+        self.assertEqual(r.data['evidence_level'], 'low')
+        self.assertTrue(r.data['input_snapshot']['inputs']
+                        ['design_day_distance_km']['stale'])
+        self.assertEqual(self.decide(r.data['id']).status_code, 400)
+
+    def test_approval_refused_with_insufficient_evidence(self):
+        r = self.readiness(charging_connector='dc')  # no DC charger recorded
+        self.assertEqual(r.data['status'], 'insufficient_evidence')
+        d = self.decide(r.data['id'])
+        self.assertEqual(d.status_code, 400)
+        self.assertIn('mandatory operational check', str(d.data['decision']))
 
     def test_short_charging_window_fails(self):
         r = self.readiness(inputs={'charging_window_hours': {
