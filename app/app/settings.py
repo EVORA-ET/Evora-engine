@@ -149,6 +149,8 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # 409 instead of 500 when a delete would erase protected evidence.
+    'EXCEPTION_HANDLER': 'evidence.exceptions.exception_handler',
 }
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

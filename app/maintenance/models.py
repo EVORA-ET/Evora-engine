@@ -27,7 +27,7 @@ class ServiceRequirement(ImmutableModel):
         'organizations.Organization', on_delete=models.CASCADE,
         related_name='service_requirements')
     vehicle = models.ForeignKey(
-        'vehicles.Vehicle', on_delete=models.CASCADE,
+        'vehicles.Vehicle', on_delete=models.RESTRICT,
         related_name='service_requirements')
     name = models.CharField(max_length=255)
     component = models.CharField(max_length=255, blank=True, default='')
@@ -38,7 +38,7 @@ class ServiceRequirement(ImmutableModel):
         max_digits=10, decimal_places=1, null=True, blank=True)
     warning_days = models.IntegerField(null=True, blank=True)
     source = models.ForeignKey(
-        'evidence.EvidenceSource', on_delete=models.PROTECT,
+        'evidence.EvidenceSource', on_delete=models.RESTRICT,
         related_name='service_requirements')
     retired_at = models.DateTimeField(null=True, blank=True)
     retired_reason = models.TextField(blank=True, default='')
@@ -75,7 +75,7 @@ class MaintenanceEvent(ImmutableModel):
         'organizations.Organization', on_delete=models.CASCADE,
         related_name='maintenance_events')
     vehicle = models.ForeignKey(
-        'vehicles.Vehicle', on_delete=models.CASCADE,
+        'vehicles.Vehicle', on_delete=models.RESTRICT,
         related_name='maintenance_events')
     event_type = models.CharField(max_length=30, choices=EventType.choices)
     occurred_on = models.DateField()
@@ -83,7 +83,7 @@ class MaintenanceEvent(ImmutableModel):
     odometer_km = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True)
     requirement = models.ForeignKey(
-        ServiceRequirement, null=True, blank=True, on_delete=models.PROTECT,
+        ServiceRequirement, null=True, blank=True, on_delete=models.RESTRICT,
         related_name='events',
         help_text='The service requirement this event satisfies.')
     component = models.CharField(max_length=255, blank=True, default='')
@@ -91,7 +91,7 @@ class MaintenanceEvent(ImmutableModel):
     fault_severity = models.CharField(
         max_length=20, choices=FaultSeverity.choices, blank=True, default='')
     resolves = models.ForeignKey(
-        'self', null=True, blank=True, on_delete=models.PROTECT,
+        'self', null=True, blank=True, on_delete=models.RESTRICT,
         related_name='resolutions',
         help_text='The fault report this event closes.')
     description = models.TextField(blank=True, default='')
@@ -104,7 +104,7 @@ class MaintenanceEvent(ImmutableModel):
     origin = models.CharField(max_length=32, choices=ORIGIN_CHOICES)
     source = models.ForeignKey(
         'evidence.EvidenceSource', null=True, blank=True,
-        on_delete=models.PROTECT, related_name='maintenance_events')
+        on_delete=models.RESTRICT, related_name='maintenance_events')
 
     voided_at = models.DateTimeField(null=True, blank=True)
     void_reason = models.TextField(blank=True, default='')

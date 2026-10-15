@@ -123,6 +123,7 @@ def odometer_profile(readings, window_start, window_end, tz):
         return out
 
     first, last = inside[0], inside[-1]
+    out['reading_ids'] = [r.id for r in inside]
     distance = last.km - first.km
     span = (last.at - first.at).total_seconds() / 86400
     out['first_reading'] = {'at': first.at.isoformat(), 'km': first.km}

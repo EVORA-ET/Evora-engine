@@ -163,9 +163,40 @@ def validate_observation(org, data):
         raise ValidationError({'transformation': (
             'A modelled value must describe how it was calculated.')})
 
+    _check_duplicate(org, kind, data)
     if kind.key == 'odometer_km':
         _check_odometer_order(org, data)
     return data
+
+
+def _check_duplicate(org, kind, data):
+    """Refuse a second current observation describing the same thing.
+
+    Same kind, same subject, same qualifiers and the same time key (instant:
+    observed_at; period: start+end; effective: effective_from). A different
+    value for the same key is a correction and must use /supersede, so two
+    conflicting values can never both be "current".
+    """
+    qs = current_observations(org).filter(
+        kind=kind.key, vehicle=data.get('vehicle'), depot=data.get('depot'),
+        ev_candidate=data.get('ev_candidate'),
+        qualifiers=data.get('qualifiers') or {})
+    if kind.temporal == K.INSTANT:
+        qs = qs.filter(observed_at=data['observed_at'])
+    elif kind.temporal == K.PERIOD:
+        qs = qs.filter(period_start=data['period_start'],
+                       period_end=data['period_end'])
+    else:
+        qs = qs.filter(effective_from=data['effective_from'])
+    sup = data.get('supersedes')
+    if sup is not None:
+        qs = qs.exclude(pk=sup.pk)
+    existing = qs.first()
+    if existing is not None:
+        raise ValidationError({'non_field_errors': [
+            f'An observation of {kind.key} for this subject and time already '
+            f'exists ({existing.pk}, value {existing.value}). To change it, '
+            'supersede it.']})
 
 
 def _check_odometer_order(org, data):
@@ -378,6 +409,11 @@ def resolve_explicit(org, name, spec, *, kind_key, unit, as_of,
                     'That observation has been superseded by a correction; '
                     'use the current one.')})
             raise ValidationError({name: 'Observation not found.'})
+        if obs.source and obs.source.verification_status == \
+                VerificationStatus.REJECTED:
+            raise ValidationError({name: (
+                'That observation cites a source that was rejected during '
+                'verification; it cannot inform an assessment.')})
         if kind_key and obs.kind != kind_key:
             raise ValidationError(
                 {name: f'Expected a {kind_key} observation, got {obs.kind}.'})

@@ -64,7 +64,7 @@ class EVCandidate(ImmutableModel):
 
     origin = models.CharField(max_length=32, choices=ORIGIN_CHOICES)
     source = models.ForeignKey(
-        'evidence.EvidenceSource', on_delete=models.PROTECT,
+        'evidence.EvidenceSource', on_delete=models.RESTRICT,
         related_name='ev_candidates')
     created_by = models.ForeignKey(
         'users.User', null=True, on_delete=models.SET_NULL, related_name='+')
@@ -91,22 +91,22 @@ class MigrationDecision(ImmutableModel):
         'organizations.Organization', on_delete=models.CASCADE,
         related_name='migration_decisions')
     vehicle = models.ForeignKey(
-        'vehicles.Vehicle', null=True, on_delete=models.SET_NULL,
+        'vehicles.Vehicle', null=True, on_delete=models.RESTRICT,
         related_name='migration_decisions')
     vehicle_snapshot = models.JSONField(default=dict)
     ev_candidate = models.ForeignKey(
-        EVCandidate, null=True, blank=True, on_delete=models.SET_NULL,
+        EVCandidate, null=True, blank=True, on_delete=models.RESTRICT,
         related_name='decisions')
     decision = models.CharField(max_length=30, choices=DecisionType.choices)
     readiness_assessment = models.ForeignKey(
         'evidence.Assessment', null=True, blank=True,
-        on_delete=models.PROTECT, related_name='+')
+        on_delete=models.RESTRICT, related_name='+')
     tco_assessment = models.ForeignKey(
         'evidence.Assessment', null=True, blank=True,
-        on_delete=models.PROTECT, related_name='+')
+        on_delete=models.RESTRICT, related_name='+')
     emissions_assessment = models.ForeignKey(
         'evidence.Assessment', null=True, blank=True,
-        on_delete=models.PROTECT, related_name='+')
+        on_delete=models.RESTRICT, related_name='+')
     rationale = models.TextField()
     decided_by = models.ForeignKey(
         'users.User', null=True, on_delete=models.SET_NULL, related_name='+')

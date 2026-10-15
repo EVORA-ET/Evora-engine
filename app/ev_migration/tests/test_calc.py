@@ -175,6 +175,20 @@ class TcoTests(SimpleTestCase):
         self.assertAlmostEqual(r['discounted_payback_years'],
                                300000 / 230000, places=2)
 
+    def test_payback_not_applicable_when_ev_costs_more_to_run(self):
+        # EV cheaper upfront (retain baseline 0 vs EV 0) but dearer to run
+        r = tco.compare(dict(TCO, ev_purchase_price=0.0,
+                             charging_infrastructure_cost=0.0,
+                             ev_maintenance_annual=400000.0))
+        self.assertLess(r['annual_operating_saving'], 0)
+        self.assertIsNone(r['simple_payback_years'])
+        self.assertIsNone(r['discounted_payback_years'])
+        # no extra upfront and cheaper to run -> nothing to recover
+        r = tco.compare(dict(TCO, ev_purchase_price=0.0,
+                             charging_infrastructure_cost=0.0))
+        self.assertEqual(r['simple_payback_years'], 0.0)
+        self.assertEqual(r['discounted_payback_years'], 0.0)
+
     def test_missing_fuel_economy_is_insufficient_not_zero(self):
         r = tco.compare(dict(TCO, fuel_economy_km_per_l=None))
         self.assertEqual(r['status'], 'insufficient')

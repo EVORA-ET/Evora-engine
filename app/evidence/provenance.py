@@ -103,6 +103,8 @@ class ResolvedInput:
     transformation: str = ''
     note: str = ''
     critical: bool = True
+    # ids of the observations/records a derived value was calculated from
+    derived_from_ids: list = field(default_factory=list)
 
     @property
     def present(self):

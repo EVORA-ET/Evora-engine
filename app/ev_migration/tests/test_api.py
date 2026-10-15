@@ -81,6 +81,9 @@ class ReadinessApiTests(MigrationApiBase):
         self.assertEqual(inputs['design_day_distance_km']['value'], 150.0)
         self.assertEqual(inputs['design_day_distance_km']['origin'],
                          'measured')
+        # every odometer reading the value was derived from is recorded
+        self.assertEqual(
+            len(inputs['design_day_distance_km']['derived_from_ids']), 40)
         self.assertEqual(inputs['charger_power_kw']['source']['title'],
                          'Utility bill Sep 2026')
         # Payload falls back to the legacy vehicle field, labelled as such.

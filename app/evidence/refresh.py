@@ -24,7 +24,11 @@ from django.utils import timezone
 from rest_framework.exceptions import ValidationError
 
 from evidence import provenance as P
-from evidence.models import RefreshStatus, VerificationStatus
+from evidence.models import (
+    RefreshStatus,
+    SourceVerification,
+    VerificationStatus,
+)
 from evidence.services import create_observation
 
 ADAPTERS = {}
@@ -78,4 +82,7 @@ def refresh_source(source, adapter, *, user=None):
         'last_refresh_status', 'last_refresh_attempt_at',
         'last_successful_refresh_at', 'last_refresh_error',
         'verification_status', 'verified_by', 'verified_at'])
+    SourceVerification.objects.create(
+        source=source, status=VerificationStatus.UNVERIFIED, decided_by=user,
+        note=f'Reset by refresh: {len(created)} new value(s) need checking.')
     return created

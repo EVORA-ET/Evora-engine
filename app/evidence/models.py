@@ -152,6 +152,30 @@ class EvidenceSource(models.Model):
         }
 
 
+class SourceVerification(models.Model):
+    """Append-only history of verification decisions on a source.
+
+    `EvidenceSource.verification_status` holds the current state; this table
+    keeps every change (who, when, what, why), including the automatic reset
+    to unverified when a refresh brings in new data.
+    """
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    source = models.ForeignKey(
+        EvidenceSource, on_delete=models.CASCADE,
+        related_name='verification_history')
+    status = models.CharField(
+        max_length=20, choices=VerificationStatus.choices)
+    note = models.TextField(blank=True, default='')
+    decided_by = models.ForeignKey(
+        'users.User', null=True, on_delete=models.SET_NULL, related_name='+')
+    decided_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        db_table = 'evidence_source_verifications'
+        ordering = ['decided_at']
+
+
 class ValidationStatus(models.TextChoices):
     VALID = 'valid'
     FLAGGED = 'flagged'
@@ -170,20 +194,22 @@ class Observation(ImmutableModel):
     value = models.DecimalField(max_digits=20, decimal_places=6)
     unit = models.CharField(max_length=32)
 
+    # RESTRICT: a vehicle/depot/candidate with recorded evidence cannot be
+    # hard-deleted (the API answers 409), so audit history is never erased.
     vehicle = models.ForeignKey(
-        'vehicles.Vehicle', null=True, blank=True, on_delete=models.CASCADE,
+        'vehicles.Vehicle', null=True, blank=True, on_delete=models.RESTRICT,
         related_name='observations')
     depot = models.ForeignKey(
-        'depots.Depot', null=True, blank=True, on_delete=models.CASCADE,
+        'depots.Depot', null=True, blank=True, on_delete=models.RESTRICT,
         related_name='observations')
     ev_candidate = models.ForeignKey(
         'ev_migration.EVCandidate', null=True, blank=True,
-        on_delete=models.CASCADE, related_name='observations')
+        on_delete=models.RESTRICT, related_name='observations')
     qualifiers = models.JSONField(default=dict, blank=True)
 
     origin = models.CharField(max_length=32, choices=ORIGIN_CHOICES)
     source = models.ForeignKey(
-        EvidenceSource, null=True, blank=True, on_delete=models.PROTECT,
+        EvidenceSource, null=True, blank=True, on_delete=models.RESTRICT,
         related_name='observations')
 
     observed_at = models.DateTimeField(null=True, blank=True)
@@ -202,7 +228,7 @@ class Observation(ImmutableModel):
     note = models.TextField(blank=True, default='')
 
     supersedes = models.OneToOneField(
-        'self', null=True, blank=True, on_delete=models.PROTECT,
+        'self', null=True, blank=True, on_delete=models.RESTRICT,
         related_name='superseded_by')
     correction_reason = models.TextField(blank=True, default='')
 
@@ -253,7 +279,7 @@ class EnergyRecord(ImmutableModel):
         'organizations.Organization', on_delete=models.CASCADE,
         related_name='energy_records')
     vehicle = models.ForeignKey(
-        'vehicles.Vehicle', on_delete=models.CASCADE,
+        'vehicles.Vehicle', on_delete=models.RESTRICT,
         related_name='energy_records')
     record_type = models.CharField(
         max_length=20, choices=EnergyRecordType.choices)
@@ -268,11 +294,11 @@ class EnergyRecord(ImmutableModel):
         max_digits=14, decimal_places=2, null=True, blank=True)
     currency = models.CharField(max_length=10, blank=True, default='')
     depot = models.ForeignKey(
-        'depots.Depot', null=True, blank=True, on_delete=models.SET_NULL,
+        'depots.Depot', null=True, blank=True, on_delete=models.RESTRICT,
         related_name='+')
     origin = models.CharField(max_length=32, choices=ORIGIN_CHOICES)
     source = models.ForeignKey(
-        EvidenceSource, null=True, blank=True, on_delete=models.PROTECT,
+        EvidenceSource, null=True, blank=True, on_delete=models.RESTRICT,
         related_name='energy_records')
     note = models.TextField(blank=True, default='')
 
@@ -323,11 +349,11 @@ class Assessment(ImmutableModel):
     kind = models.CharField(max_length=32, choices=AssessmentKind.choices)
     method_version = models.CharField(max_length=64)
     vehicle = models.ForeignKey(
-        'vehicles.Vehicle', null=True, blank=True, on_delete=models.SET_NULL,
+        'vehicles.Vehicle', null=True, blank=True, on_delete=models.RESTRICT,
         related_name='assessments')
     ev_candidate = models.ForeignKey(
         'ev_migration.EVCandidate', null=True, blank=True,
-        on_delete=models.SET_NULL, related_name='assessments')
+        on_delete=models.RESTRICT, related_name='assessments')
     subject_snapshot = models.JSONField(
         default=dict,
         help_text='Identity of the vehicle/candidate at assessment time.')

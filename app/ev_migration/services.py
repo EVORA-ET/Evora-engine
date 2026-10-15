@@ -152,8 +152,8 @@ def _measured_from_usage(ctx, name, unit, value, transformation, ids):
         name=name, value=float(value), unit=unit, origin=P.MEASURED,
         evidence_class=P.STALE if stale else P.MEASURED, stale=stale,
         stale_reason=reason, transformation=transformation,
-        note=f'Derived from records: {", ".join(ids[:20])}'
-        + (' ...' if len(ids) > 20 else ''))
+        note=f'Derived from {len(ids)} stored record(s).',
+        derived_from_ids=list(ids))
 
 
 # ---------------------------------------------------------------------------
@@ -173,8 +173,7 @@ def resolve_annual_distance(ctx):
             odo['annualised_distance_km'],
             (f'({odo["last_reading"]["km"]} - {odo["first_reading"]["km"]}) km '
              f'over {odo["span_days"]} days x 365 (usage/1.0.0)'),
-            [f'odometer readings {odo["first_reading"]["at"]} to '
-             f'{odo["last_reading"]["at"]}'])
+            odo['reading_ids'])
 
     return S.first_available(
         'annual_distance_km', 'km/year',
@@ -292,7 +291,7 @@ def _design_day(ctx):
             (f'{"90th percentile" if key == "p90_km" else "maximum"} of '
              f'{odo["daily"]["sample_count"]} measured daily distances, '
              f'{ctx.window_days}-day window (usage/1.0.0)'),
-            ['odometer readings in window'])
+            odo.get('reading_ids', []))
         if r is None:
             return P.ResolvedInput.missing(
                 'design_day_distance_km', 'km',

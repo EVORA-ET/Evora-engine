@@ -28,6 +28,7 @@ from evidence.models import (
     EnergyRecord,
     EvidenceSource,
     Observation,
+    SourceVerification,
     VerificationStatus,
 )
 from evidence.serializers import (
@@ -126,6 +127,9 @@ class SourceVerifyView(APIView):
         source.save(update_fields=['verification_status',
                                    'verification_note', 'verified_by',
                                    'verified_at'])
+        SourceVerification.objects.create(
+            source=source, status=source.verification_status,
+            note=source.verification_note, decided_by=request.user)
         return Response(EvidenceSourceSerializer(source).data)
 
 

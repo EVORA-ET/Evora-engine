@@ -18,8 +18,12 @@ The flow is: request → `services` resolve each input (with provenance) →
 snapshot → registered `compute(snapshot, parameters)` → coverage
 classification → immutable `Assessment`. Views only translate HTTP.
 
-Migrations are additive (`CreateModel` only, on new tables). No existing
-table or column changed. All three apps roll back cleanly to zero.
+Migrations are additive. The first set creates the new tables. The
+follow-up set (`evidence/0002`, `ev_migration/0003`, `maintenance/0002`)
+changes delete rules, which Django enforces in Python, so no SQL runs for
+those. It also creates one table, `evidence_source_verifications`. No
+existing table or column is changed. All three apps roll back cleanly to
+zero.
 
 ## 2. Provenance
 
@@ -50,6 +54,24 @@ Evidence is append-only:
 - **Service requirements** are retired.
 - **Assessments, candidates and decisions** are immutable. The model `save()`
   refuses edits.
+- **Duplicates are refused.** A second current observation with the same
+  kind, subject, qualifiers and time key is rejected (correct it with
+  `/supersede` instead). A second non-voided fuel or charging record for the
+  same vehicle, type and exact time is also rejected. These are
+  application-level checks; two simultaneous identical requests could still
+  both succeed.
+- **Deletion.** Every link from evidence to a vehicle, depot, EV candidate or
+  source uses `on_delete=RESTRICT`. Deleting one of those records on its own
+  while it has evidence, maintenance history or assessments returns
+  **409** (`evidence.exceptions.exception_handler`, registered as DRF's
+  `EXCEPTION_HANDLER`). Deleting a whole organization still cascades.
+  Records without evidence delete exactly as before.
+- **Verification history.** Every verify/reject decision, and every reset
+  caused by a refresh, is appended to `SourceVerification` and returned as
+  `verification_history` on the source.
+- **Derived inputs.** When a measured input is derived from stored records
+  (annualised distance, design-day distance, fill-to-fill economy), the ids
+  of every record used are stored in that input's `derived_from_ids`.
 
 ## 3. Observation kinds (`evidence/kinds.py`, `GET /api/evidence/kinds`)
 

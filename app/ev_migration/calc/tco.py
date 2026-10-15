@@ -107,16 +107,17 @@ def scenario(*, initial, annual, residual, km, n, r):
 def _payback(ice, ev, n, r):
     extra = ev['_initial'] - ice['_initial']
     saving = ice['_annual_total'] - ev['_annual_total']
-    if extra <= 0:
-        simple = 0.0  # nothing extra to recover
-    elif saving > 0:
-        simple = extra / saving
+    if saving < 0:
+        # The EV costs more to run every year: there is no point at which
+        # it "pays back", whatever the upfront difference.
+        simple = discounted = None
+    elif extra <= 0:
+        simple = discounted = 0.0  # no extra upfront cost to recover
     else:
-        simple = None
-
+        simple = extra / saving if saving > 0 else None
+        discounted = None
     cumulative = -extra
-    discounted = 0.0 if cumulative >= 0 else None
-    if discounted is None:
+    if discounted is None and simple is not None:
         for t in range(1, n + 1):
             step = saving / (1 + r) ** t
             if step > 0 and cumulative + step >= 0:
@@ -128,8 +129,8 @@ def _payback(ice, ev, n, r):
         'annual_operating_saving': _r2(saving),
         'simple_payback_years': None if simple is None else round(simple, 2),
         'simple_payback_note': (
-            'Undiscounted; ignores residual values. Not meaningful when the '
-            'EV costs more to run each year.'),
+            'Undiscounted; ignores residual values. Null when the EV costs '
+            'more to run each year (payback does not apply).'),
         'discounted_payback_years': (
             None if discounted is None else round(discounted, 2)),
         'discounted_payback_note': (

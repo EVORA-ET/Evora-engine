@@ -12,6 +12,7 @@ from evidence.models import (
     EnergyRecordType,
     EvidenceSource,
     Observation,
+    SourceVerification,
 )
 from ev_migration.models import EVCandidate
 from vehicles.models import FuelType, Vehicle
@@ -20,6 +21,7 @@ from vehicles.models import FuelType, Vehicle
 class EvidenceSourceSerializer(serializers.ModelSerializer):
     organization_id = serializers.UUIDField(read_only=True)
     verified_by_id = serializers.UUIDField(read_only=True)
+    verification_history = serializers.SerializerMethodField()
 
     class Meta:
         model = EvidenceSource
@@ -32,6 +34,7 @@ class EvidenceSourceSerializer(serializers.ModelSerializer):
             'verification_note', 'refresh_interval_days',
             'last_refresh_status', 'last_refresh_attempt_at',
             'last_successful_refresh_at', 'last_refresh_error', 'created_at',
+            'verification_history',
         ]
         read_only_fields = [
             'id', 'organization_id', 'verification_status', 'verified_by_id',
@@ -39,6 +42,10 @@ class EvidenceSourceSerializer(serializers.ModelSerializer):
             'last_refresh_attempt_at', 'last_successful_refresh_at',
             'last_refresh_error', 'created_at',
         ]
+
+    def get_verification_history(self, obj) -> list:
+        return SourceVerificationSerializer(
+            obj.verification_history.all(), many=True).data
 
     def validate(self, attrs):
         if attrs.get('retrieved_at') and attrs['retrieved_at'] > \
@@ -53,6 +60,15 @@ class EvidenceSourceSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 {'url': 'An API source must record its endpoint URL.'})
         return attrs
+
+
+class SourceVerificationSerializer(serializers.ModelSerializer):
+    decided_by_id = serializers.UUIDField(read_only=True)
+
+    class Meta:
+        model = SourceVerification
+        fields = ['status', 'note', 'decided_by_id', 'decided_at']
+        read_only_fields = fields
 
 
 class SourceVerifySerializer(serializers.Serializer):
@@ -210,6 +226,13 @@ class EnergyRecordSerializer(serializers.ModelSerializer):
         if origin in (P.MODELLED, P.ASSUMED):
             errors['origin'] = ('Fuel and charging records must be measured or '
                                 'organization_provided.')
+        if EnergyRecord.objects.filter(
+                organization=org, vehicle=vehicle, record_type=rtype,
+                occurred_at=attrs['occurred_at'],
+                voided_at__isnull=True).exists():
+            errors['occurred_at'] = (
+                'A record of this type already exists for this vehicle at this '
+                'exact time. Void the wrong one instead of adding a second.')
         if errors:
             raise serializers.ValidationError(errors)
         return attrs
