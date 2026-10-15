@@ -44,6 +44,7 @@ INSTALLED_APPS = [
     'users',
     'organizations',
     'vehicles',
+    'fleets',
     'drivers',
     'depots',
     'stops',

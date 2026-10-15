@@ -76,6 +76,18 @@ class Vehicle(models.Model):
         srid=4326, geography=True, null=True, blank=True
     )
     assigned_driver_id = models.UUIDField(null=True, blank=True)
+    fleet = models.ForeignKey(
+        'fleets.Fleet',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='vehicles',
+    )
+    depot = models.ForeignKey(
+        'depots.Depot',
+        null=True, blank=True,
+        on_delete=models.SET_NULL,
+        related_name='vehicles',
+    )
     odometer_km = models.DecimalField(
         max_digits=12, decimal_places=2, null=True, blank=True
     )

@@ -16,7 +16,14 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from django.db.models import Count, Q
+
+from common.api import (
+    Conflict, apply_ordering, conflict_response, get_search, list_response,
+)
 from depots.models import BulkUpload, Depot, UploadStatus
+from job_templates.models import JobTemplate
+from vehicles.models import Vehicle
 from depots.serializers import (
     BulkUploadSerializer,
     BulkUploadStatusSerializer,
@@ -47,6 +54,64 @@ DEPOT_FIELD_MAP = {
 }
 
 
+ORDERING = {
+    'name': 'name',
+    'created_at': 'created_at',
+    'parking_capacity': 'parking_capacity',
+    'charger_count': 'charger_count',
+}
+
+
+def depot_stats(org, depot_ids):
+    """Vehicles, EVs, fleets and routes per depot: two grouped queries."""
+    stats = {
+        pk: {'vehicle_count': 0, 'ev_count': 0, 'fleet_count': 0, 'route_count': 0}
+        for pk in depot_ids
+    }
+    vehicle_rows = (
+        Vehicle.objects.filter(organization=org, depot_id__in=depot_ids)
+        .values('depot_id')
+        .annotate(
+            n=Count('id'),
+            ev=Count('id', filter=Q(fuel_type='ev')),
+            fleets=Count('fleet_id', distinct=True),
+        )
+    )
+    for row in vehicle_rows:
+        stats[row['depot_id']].update(
+            vehicle_count=row['n'], ev_count=row['ev'], fleet_count=row['fleets'])
+
+    seen = {pk: set() for pk in depot_ids}
+    templates = JobTemplate.objects.filter(organization=org).filter(
+        Q(source_depot_id__in=depot_ids) | Q(destination_depot_id__in=depot_ids)
+    ).values_list('id', 'source_depot_id', 'destination_depot_id')
+    for template_id, source_id, destination_id in templates:
+        for depot_id in (source_id, destination_id):
+            if depot_id in seen:
+                seen[depot_id].add(template_id)
+    for depot_id, ids in seen.items():
+        stats[depot_id]['route_count'] = len(ids)
+    return stats
+
+
+def filter_depots(request, queryset):
+    search = get_search(request)
+    if search:
+        queryset = queryset.filter(
+            Q(name__icontains=search) | Q(address__icontains=search)
+            | Q(depot_manager_name__icontains=search)
+        )
+    for param, column in (
+        ('charging', 'charging_available'),
+        ('workshop', 'workshop_available'),
+        ('fuel_station', 'fuel_station_available'),
+    ):
+        raw = request.query_params.get(param)
+        if raw in ('true', 'false'):
+            queryset = queryset.filter(**{column: raw == 'true'})
+    return queryset
+
+
 class DepotListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -60,11 +125,12 @@ class DepotListCreateView(APIView):
     )
     def get(self, request):
         org = get_user_org(request.user)
-        depots = Depot.objects.filter(
-            organization=org
-        ).order_by('-created_at')
-        serializer = DepotSerializer(depots, many=True)
-        return Response(serializer.data)
+        depots = filter_depots(request, Depot.objects.filter(organization=org))
+        depots = apply_ordering(depots, request, ORDERING, ['-created_at'])
+        return list_response(
+            request, depots, DepotSerializer,
+            enrich=lambda items: {'depot_stats': depot_stats(org, [d.pk for d in items])},
+        )
 
     @extend_schema(
         summary='Create depot',
@@ -124,8 +190,36 @@ class DepotDetailView(RetrieveUpdateDestroyAPIView):
         org = get_user_org(self.request.user)
         return Depot.objects.filter(organization=org)
 
-    def perform_destroy(self, instance):
-        instance.delete()
+    def _present(self, depot):
+        org = get_user_org(self.request.user)
+        return DepotSerializer(
+            depot, context={'depot_stats': depot_stats(org, [depot.pk])}
+        ).data
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response(self._present(self.get_object()))
+
+    def destroy(self, request, *args, **kwargs):
+        depot = self.get_object()
+        org = get_user_org(request.user)
+        stats = depot_stats(org, [depot.pk])[depot.pk]
+        if stats['route_count'] or stats['vehicle_count']:
+            parts = []
+            if stats['route_count']:
+                parts.append(f"{stats['route_count']} route(s)")
+            if stats['vehicle_count']:
+                parts.append(f"{stats['vehicle_count']} vehicle(s)")
+            return conflict_response(Conflict(
+                f"This depot is still used by {' and '.join(parts)}. Deleting it "
+                'would remove those routes and every job scheduled on them. '
+                'Move the vehicles and reassign or archive the routes first.',
+                {
+                    'routes': stats['route_count'],
+                    'vehicles': stats['vehicle_count'],
+                },
+            ))
+        depot.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', True)
@@ -135,8 +229,7 @@ class DepotDetailView(RetrieveUpdateDestroyAPIView):
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        data = DepotSerializer(instance).data
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(self._present(instance), status=status.HTTP_200_OK)
 
 
 class BulkUploadView(APIView):

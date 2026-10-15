@@ -13,6 +13,10 @@ class InstanceStopSerializer(serializers.ModelSerializer):
         queryset=Stop.objects.all(), source='stop',
     )
 
+    stop_name = serializers.CharField(source='stop.name', read_only=True)
+    stop_address = serializers.CharField(source='stop.address', read_only=True)
+    stop_type = serializers.CharField(source='stop.stop_type', read_only=True)
+
     class Meta:
         model = InstanceStop
         fields = [
@@ -27,9 +31,12 @@ class InstanceStopSerializer(serializers.ModelSerializer):
             'delay_minutes',
             'notes',
             'created_at',
+            'stop_name',
+            'stop_address',
+            'stop_type',
         ]
         read_only_fields = [
-            'id', 'created_at',
+            'id', 'created_at', 'stop_name', 'stop_address', 'stop_type',
         ]
 
     def validate_sequence_number(self, value):
