@@ -51,6 +51,9 @@ INSTALLED_APPS = [
     'job_templates',
     'job_instances',
     'instance_stops',
+    'evidence',
+    'ev_migration',
+    'maintenance',
 ]
 
 MIDDLEWARE = [
