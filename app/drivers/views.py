@@ -2,6 +2,7 @@ import csv
 import threading
 
 import openpyxl
+from django.db.models import Q
 from drf_spectacular.utils import extend_schema, extend_schema_view
 from rest_framework import status
 from rest_framework.exceptions import (
@@ -15,13 +16,21 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.api import (
+    Conflict, apply_ordering, conflict_response, get_choice_list, get_search,
+    list_response, selected_day,
+)
 from drivers.models import BulkUpload, Driver, DriverStatus, UploadStatus
 from drivers.serializers import (
     BulkUploadSerializer,
     BulkUploadStatusSerializer,
+    DriverOpsSerializer,
     DriverSerializer,
     DriverUpdateSerializer,
 )
+from job_instances.models import JobInstance
+from job_instances.services import open_jobs_by
+from operations import rules
 
 
 def get_user_org(user):
@@ -49,24 +58,75 @@ DRIVER_FIELD_MAP = {
 }
 
 
+ORDERING = {
+    'name': 'name',
+    'driver_code': 'driver_code',
+    'status': 'status',
+    'license_expiry': 'license_expiry',
+    'experience_years': 'experience_years',
+    'shift': 'shift',
+    'created_at': 'created_at',
+}
+AVAILABILITY = ('available', 'assigned', 'unavailable')
+
+
+def filter_drivers(request, org, queryset):
+    search = get_search(request)
+    if search:
+        queryset = queryset.filter(
+            Q(name__icontains=search)
+            | Q(driver_code__icontains=search)
+            | Q(license_number__icontains=search)
+        )
+    statuses = get_choice_list(request, 'status', DriverStatus.values)
+    if statuses:
+        queryset = queryset.filter(status__in=statuses)
+    shift = (request.query_params.get('shift') or '').strip()
+    if shift:
+        queryset = queryset.filter(shift__iexact=shift)
+
+    availability = request.query_params.get('availability')
+    if availability:
+        if availability not in AVAILABILITY:
+            raise ValidationError({'availability': f'Use one of: {", ".join(AVAILABILITY)}.'})
+        _, _, day, start, end = selected_day(request, org)
+        usable = rules.driver_usable_q(day)
+        committed = rules.committed_driver_ids(org, start, end)
+        if availability == 'unavailable':
+            queryset = queryset.exclude(usable)
+        elif availability == 'assigned':
+            queryset = queryset.filter(usable, pk__in=committed)
+        else:
+            queryset = queryset.filter(usable).exclude(pk__in=committed)
+    return queryset
+
+
+def ops_context(org, drivers):
+    return {'open_jobs': open_jobs_by('driver', [d.pk for d in drivers], org)}
+
+
 class DriverListCreateView(APIView):
     permission_classes = [IsAuthenticated]
 
     @extend_schema(
         summary='List drivers',
         description=(
-            "Returns all drivers belonging to the "
-            "authenticated user's organization."
+            "Returns drivers for the authenticated user's organization. "
+            'Without query parameters a bare array (legacy); with '
+            '`page`/`page_size` a page envelope including the current job. '
+            'Filters: `search`, `status` (comma list), `shift`, `availability` '
+            '(available|assigned|unavailable, relative to `date`), `ordering`.'
         ),
-        responses={200: DriverSerializer(many=True)},
+        responses={200: DriverOpsSerializer(many=True)},
     )
     def get(self, request):
         org = get_user_org(request.user)
-        drivers = Driver.objects.filter(
-            organization=org
-        ).order_by('-created_at')
-        serializer = DriverSerializer(drivers, many=True)
-        return Response(serializer.data)
+        drivers = filter_drivers(request, org, Driver.objects.filter(organization=org))
+        drivers = apply_ordering(drivers, request, ORDERING, ['-created_at'])
+        return list_response(
+            request, drivers, DriverOpsSerializer,
+            enrich=lambda items: ops_context(org, items),
+        )
 
     @extend_schema(
         summary='Create driver',
@@ -75,14 +135,17 @@ class DriverListCreateView(APIView):
             "user's organization."
         ),
         request=DriverSerializer,
-        responses={201: DriverSerializer},
+        responses={201: DriverOpsSerializer},
     )
     def post(self, request):
         org = get_user_org(request.user)
-        serializer = DriverSerializer(data=request.data)
+        serializer = DriverSerializer(data=request.data, context={'request': request})
         serializer.is_valid(raise_exception=True)
-        serializer.save(organization=org)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+        driver = serializer.save(organization=org)
+        data = DriverOpsSerializer(
+            driver, context={'request': request, **ops_context(org, [driver])}
+        ).data
+        return Response(data, status=status.HTTP_201_CREATED)
 
 
 @extend_schema_view(
@@ -92,24 +155,26 @@ class DriverListCreateView(APIView):
             "Returns a driver by its ID (scoped to "
             "user's organization)."
         ),
-        responses={200: DriverSerializer, 404: None},
+        responses={200: DriverOpsSerializer, 404: None},
     ),
     patch=extend_schema(
         summary='Update driver',
         description=(
             "Partially updates a driver (scoped to "
-            "user's organization)."
+            "user's organization). Changing status does not touch open jobs; "
+            "`open_job_count` in the response shows how many still reference them."
         ),
         request=DriverUpdateSerializer,
-        responses={200: DriverSerializer, 404: None},
+        responses={200: DriverOpsSerializer, 404: None},
     ),
     delete=extend_schema(
         summary='Delete driver',
         description=(
-            "Deletes a driver (scoped to "
-            "user's organization)."
+            "Deletes a driver (scoped to user's organization). Blocked with "
+            "409 if any job has ever used them: set the status to Terminated "
+            "or Inactive instead."
         ),
-        responses={204: None, 404: None},
+        responses={204: None, 404: None, 409: None},
     ),
     put=extend_schema(exclude=True),
 )
@@ -120,14 +185,36 @@ class DriverDetailView(RetrieveUpdateDestroyAPIView):
     def get_serializer_class(self):
         if self.request.method in ('PUT', 'PATCH'):
             return DriverUpdateSerializer
-        return DriverSerializer
+        return DriverOpsSerializer
 
     def get_queryset(self):
         org = get_user_org(self.request.user)
         return Driver.objects.filter(organization=org)
 
-    def perform_destroy(self, instance):
-        instance.delete()
+    def _ops(self, driver):
+        org = get_user_org(self.request.user)
+        return DriverOpsSerializer(
+            driver,
+            context={'request': self.request, **ops_context(org, [driver])},
+        ).data
+
+    def retrieve(self, request, *args, **kwargs):
+        return Response(self._ops(self.get_object()))
+
+    def destroy(self, request, *args, **kwargs):
+        driver = self.get_object()
+        used = JobInstance.objects.filter(driver=driver)
+        total = used.count()
+        if total:
+            open_count = used.filter(status__in=rules.OPEN_STATUSES).count()
+            return conflict_response(Conflict(
+                f'This driver is referenced by {total} job(s) '
+                f'({open_count} still open). Deleting them would erase that '
+                'history. Set their status to Terminated or Inactive instead.',
+                {'job_instances': total, 'open_job_instances': open_count},
+            ))
+        driver.delete()
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     def update(self, request, *args, **kwargs):
         partial = kwargs.pop('partial', True)
@@ -137,8 +224,7 @@ class DriverDetailView(RetrieveUpdateDestroyAPIView):
         )
         serializer.is_valid(raise_exception=True)
         self.perform_update(serializer)
-        data = DriverSerializer(instance).data
-        return Response(data, status=status.HTTP_200_OK)
+        return Response(self._ops(instance), status=status.HTTP_200_OK)
 
 
 class BulkUploadView(APIView):
