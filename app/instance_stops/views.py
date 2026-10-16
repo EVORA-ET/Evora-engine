@@ -6,6 +6,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
+from common.api import get_uuid
 from instance_stops.models import InstanceStop
 from instance_stops.serializers import (
     InstanceStopSerializer,
@@ -35,7 +36,10 @@ class InstanceStopListCreateView(APIView):
         org = get_user_org(request.user)
         instances = InstanceStop.objects.filter(
             job_instance__organization=org
-        ).order_by('sequence_number')
+        ).select_related('stop').order_by('sequence_number')
+        job_id = get_uuid(request, 'job_instance_id')
+        if job_id:
+            instances = instances.filter(job_instance_id=job_id)
         serializer = InstanceStopSerializer(instances, many=True)
         return Response(serializer.data)
 

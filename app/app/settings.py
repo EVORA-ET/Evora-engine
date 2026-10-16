@@ -44,12 +44,17 @@ INSTALLED_APPS = [
     'users',
     'organizations',
     'vehicles',
+    'fleets',
     'drivers',
     'depots',
     'stops',
     'job_templates',
     'job_instances',
     'instance_stops',
+    'evidence',
+    'ev_migration',
+    'maintenance',
+    'carbon',
 ]
 
 MIDDLEWARE = [
@@ -145,6 +150,8 @@ REST_FRAMEWORK = {
         'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    # 409 instead of 500 when a delete would erase protected evidence.
+    'EXCEPTION_HANDLER': 'evidence.exceptions.exception_handler',
 }
 
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')

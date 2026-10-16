@@ -58,7 +58,12 @@ class OrganizationCreateView(APIView):
 )
 class OrganizationDetailView(RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
-    queryset = Organization.objects.all()
+
+    def get_queryset(self):
+        # Users may only read and edit their own organization; any other id
+        # is "not found" so organization ids cannot be probed.
+        return Organization.objects.filter(
+            pk=self.request.user.organization_id)
 
     def get_serializer_class(self):
         if self.request.method in ('PUT', 'PATCH'):

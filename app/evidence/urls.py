@@ -1,0 +1,35 @@
+from django.urls import path
+
+from evidence import views as v
+
+urlpatterns = [
+    path('evidence/kinds', v.KindListView.as_view(), name='evidence-kinds'),
+    path('evidence/sources', v.SourceListCreateView.as_view(),
+         name='evidence-sources'),
+    path('evidence/sources/<uuid:pk>', v.SourceDetailView.as_view(),
+         name='evidence-source-detail'),
+    path('evidence/sources/<uuid:pk>/verify', v.SourceVerifyView.as_view(),
+         name='evidence-source-verify'),
+    path('evidence/observations', v.ObservationListCreateView.as_view(),
+         name='evidence-observations'),
+    path('evidence/observations/import', v.ObservationImportView.as_view(),
+         name='evidence-observations-import'),
+    path('evidence/observations/<uuid:pk>', v.ObservationDetailView.as_view(),
+         name='evidence-observation-detail'),
+    path('evidence/observations/<uuid:pk>/supersede',
+         v.ObservationSupersedeView.as_view(),
+         name='evidence-observation-supersede'),
+    path('evidence/energy-records', v.EnergyRecordListCreateView.as_view(),
+         name='evidence-energy-records'),
+    path('evidence/energy-records/<uuid:pk>/void',
+         v.EnergyRecordVoidView.as_view(), name='evidence-energy-record-void'),
+    path('evidence/vehicles/<uuid:pk>/usage', v.VehicleUsageView.as_view(),
+         name='evidence-vehicle-usage'),
+    path('evidence/assessments', v.AssessmentListView.as_view(),
+         name='evidence-assessments'),
+    path('evidence/assessments/<uuid:pk>', v.AssessmentDetailView.as_view(),
+         name='evidence-assessment-detail'),
+    path('evidence/assessments/<uuid:pk>/reproduce',
+         v.AssessmentReproduceView.as_view(),
+         name='evidence-assessment-reproduce'),
+]

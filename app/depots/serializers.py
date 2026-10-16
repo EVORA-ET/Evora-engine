@@ -61,6 +61,15 @@ class DepotSerializer(serializers.ModelSerializer):
     def validate_operating_hours(self, value):
         return validate_operating_hours(value)
 
+    def to_representation(self, instance):
+        data = super().to_representation(instance)
+        stats = self.context.get('depot_stats')
+        if stats is not None:
+            data.update(stats.get(instance.pk, {
+                'vehicle_count': 0, 'ev_count': 0, 'fleet_count': 0, 'route_count': 0,
+            }))
+        return data
+
 
 class DepotUpdateSerializer(serializers.ModelSerializer):
     location = GeometryField(required=False, allow_null=True)
